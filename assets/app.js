@@ -299,7 +299,10 @@
       return '<div class="guided-fields">' + lab.fields.map(function (field) {
         var value = "";
         try { var s = JSON.parse(lab.starter || "{}"); value = s[field.key] == null ? "" : s[field.key]; } catch (_) {}
-        return '<label>' + esc(field.label || field.key) + '<input data-field="' + esc(field.key) + '" type="' + (field.type === "number" ? "number" : "text") + '" value="' + esc(value) + '"></label>';
+        var control = field.type === "select"
+          ? '<select data-field="' + esc(field.key) + '">' + (field.options || []).map(function (option) { return '<option value="' + esc(option) + '"' + (String(value) === String(option) ? " selected" : "") + '>' + esc(option) + '</option>'; }).join("") + '</select>'
+          : '<input data-field="' + esc(field.key) + '" type="' + (field.type === "number" ? "number" : "text") + '" value="' + esc(value) + '">';
+        return '<label>' + esc(field.label || field.key) + control + '</label>';
       }).join("") + '</div><details class="raw-input"><summary>Lihat / edit JSON (opsional)</summary><textarea id="lab-input" rows="5">' + esc(lab.starter || "{}") + "</textarea></details>";
     }
     return '<textarea id="lab-input" rows="5">' + esc(lab.starter || "") + "</textarea>";
@@ -318,11 +321,11 @@
     var form = document.getElementById("lab-form"), textarea = document.getElementById("lab-input"), panel = document.getElementById("response-panel"), visual = document.getElementById("fixture-visual"), status = document.getElementById("runtime-preview-status");
     function currentRaw() {
       if (lab.fields && lab.fields.length && document.querySelector(".guided-fields")) {
-        var obj = {}; document.querySelectorAll("[data-field]").forEach(function (el) { obj[el.getAttribute("data-field")] = el.value; }); return JSON.stringify(obj, null, 2);
+        var obj = {}; try { obj = JSON.parse(lab.starter || "{}"); } catch (_) {} document.querySelectorAll("[data-field]").forEach(function (el) { obj[el.getAttribute("data-field")] = el.value; }); return JSON.stringify(obj, null, 2);
       }
       return textarea ? textarea.value : "";
     }
-    if (lab.fields) document.querySelectorAll("[data-field]").forEach(function (el) { el.addEventListener("input", function () { if (textarea) { var obj = {}; document.querySelectorAll("[data-field]").forEach(function (f) { obj[f.getAttribute("data-field")] = f.value; }); textarea.value = JSON.stringify(obj, null, 2); } }); });
+    if (lab.fields) document.querySelectorAll("[data-field]").forEach(function (el) { el.addEventListener("input", function () { if (textarea) { var obj = {}; try { obj = JSON.parse(lab.starter || "{}"); } catch (_) {} document.querySelectorAll("[data-field]").forEach(function (f) { obj[f.getAttribute("data-field")] = f.value; }); textarea.value = JSON.stringify(obj, null, 2); } }); });
     form.addEventListener("submit", function (event) {
       event.preventDefault(); lastRaw = currentRaw(); var ok = evaluate(lab, lastRaw); rawData = responseFor(lab, lastRaw, ok); visual.innerHTML = fixtureVisual(lab, rawData, lastRaw); status.textContent = "HTTP " + rawData.status + " · respons dirender"; panel.className = "response-panel " + (ok ? "success" : "error"); panel.innerHTML = '<span class="response-label">OUTPUT</span><div class="result-status">' + (ok ? "✓ Misi selesai · +" + esc(lab.xp || 100) + " XP" : "Belum tepat · coba lagi") + '</div><pre>' + esc(json(rawData)) + "</pre>" + (ok ? '<p class="attempt-feedback">' + esc(lab.explanation || "Target tercapai.") + "</p>" : '<p class="attempt-feedback">' + esc(lab.retry || "Baca hint untuk petunjuk berikutnya.") + "</p>"); if (ok) { markDone(lab.id); showToast("Lab selesai · progres tersimpan"); } else showToast("Respons diterima · cek hint dan coba lagi"); window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
     });
@@ -368,6 +371,7 @@
     try {
       var responses = await Promise.all([fetch("assets/materials.json"), fetch("assets/labs.json")]);
       materials = await responses[0].json(); labs = await responses[1].json();
+      window.sitpAcademyData = { materials: materials, labs: labs };
       updateTopProgress(); route();
     } catch (error) {
       root.innerHTML = '<div class="empty"><h2>Data belum dapat dimuat</h2><p>Jalankan situs melalui server lokal (misalnya <code>python -m http.server</code>), bukan file://.</p><pre>' + esc(error.message) + "</pre></div>";
