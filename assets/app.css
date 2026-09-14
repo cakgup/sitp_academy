@@ -319,7 +319,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .topbar-brand .brand-sub{font-size:7px;letter-spacing:3px;margin-top:5px}
 .top-nav{display:flex}
 @media(max-width:700px){.topbar-brand{font-size:18px;letter-spacing:-.5px}.topbar-brand .brand-mark{width:36px;height:38px}.topbar-brand .brand-sub{font-size:6px;letter-spacing:2.4px;margin-top:4px}.top-nav{display:none}}
-.group-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.group-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:stretch}
 .overview-topic-card,.overview-variant-card{min-height:430px}
 .overview-topic-card .overview-info-panel,.overview-variant-card .overview-info-panel{margin-top:auto}
 .overview-lab-card,.overview-feature-card{min-height:430px}
