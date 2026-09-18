@@ -418,17 +418,15 @@ main,.page-home main{max-width:1320px;margin-inline:auto}
 @media(max-width:700px){.fixture-specific-head{flex-direction:column;gap:8px}.fixture-journey{grid-template-columns:1fr;gap:7px}.fixture-journey>div{grid-template-columns:auto 1fr}.fixture-journey>i{display:none}.fixture-data-grid{grid-template-columns:1fr}.fixture-state{align-self:flex-start}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}.button:hover,.overview-card:hover,.back-to-top:hover{transform:none}}
 
-/* SATRIA brand lockup: use the canonical logo from the SATRIA repository while
-   keeping the Academy product label readable against the blue top bar. */
-.topbar-brand{gap:0;min-width:0}
-.topbar-brand .brand-lockup{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0}
-.topbar-brand .brand-logo-wrap{display:flex;align-items:center;justify-content:center;width:126px;height:42px;padding:5px 10px;border:1px solid rgba(255,255,255,.35);border-radius:9px;background:#fff;box-shadow:0 7px 16px rgba(8,27,61,.18);flex-shrink:0}
-.topbar-brand .brand-logo{display:block;width:106px;height:auto;max-width:100%;object-fit:contain}
+/* SATRIA brand lockup: transparent, horizontal, and readable on the blue
+   top bar. The light derivative keeps the SATRIA mark from needing a white box. */
+.topbar-brand{gap:10px;min-width:0}
+.topbar-brand .brand-logo-wrap{display:flex;align-items:center;justify-content:center;width:118px;height:40px;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;flex-shrink:0}
+.topbar-brand .brand-logo{display:block;width:112px;height:auto;max-width:100%;object-fit:contain}
 .topbar-brand .brand-product{margin:0;color:#fff;font-size:8px;font-weight:800;letter-spacing:3px;line-height:1}
-.topbar-brand:hover .brand-logo-wrap{border-color:#ffdf65;box-shadow:0 9px 20px rgba(8,27,61,.24)}
 @media(max-width:700px){
-  .topbar-brand .brand-lockup{gap:2px}
-  .topbar-brand .brand-logo-wrap{width:102px;height:36px;padding:4px 8px;border-radius:8px}
-  .topbar-brand .brand-logo{width:86px}
+  .topbar-brand{gap:8px}
+  .topbar-brand .brand-logo-wrap{width:102px;height:36px}
+  .topbar-brand .brand-logo{width:96px}
   .topbar-brand .brand-product{font-size:7px;letter-spacing:2.2px}
 }
