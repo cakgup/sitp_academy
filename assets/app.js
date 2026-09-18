@@ -121,6 +121,17 @@
   function layout(content, pageClass) {
     document.body.className = pageClass || "";
     root.innerHTML = content;
+    var pageHeading = root.querySelector("h1, h2");
+    document.title = pageHeading && pageHeading.textContent.trim()
+      ? "SITP Academy · " + pageHeading.textContent.trim()
+      : "SITP Academy";
+    document.querySelectorAll(".top-nav a").forEach(function (a) {
+      var href = a.getAttribute("href") || "";
+      var active = (pageClass === "page-home" || pageClass === "page-category" || pageClass === "page-topic" || pageClass === "page-lab" || pageClass === "page-material" || pageClass === "page-all-labs")
+        ? href === "#/"
+        : (pageClass === "page-library" && href === "#/library");
+      if (active) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+    });
     var crumb = document.getElementById("crumb-label");
     if (crumb) crumb.textContent = pageClass === "page-home" ? "Overview" : (pageClass || "Workspace").replace("page-", "").replace(/-/g, " ").replace(/\b\w/g, function (m) { return m.toUpperCase(); });
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -148,9 +159,9 @@
       '<div class="progress-panel"><div class="progress-panel-head"><div><span class="eyebrow">LEARNING CONTROL</span><strong>Personal workspace</strong></div><span class="green-dot"></span></div><span class="muted" style="display:block;margin-top:18px;font-size:10px">Current progress</span><strong style="font-size:27px;color:#1d2b56">' + doneCount + " / " + labs.length + "</strong><progress max='" + labs.length + "' value='" + doneCount + "'></progress>" +
       '<div class="progress-panel-stats"><div><strong>' + doneCount + '</strong><span>Lab selesai</span></div><div><strong>' + materials.lessons.length + '</strong><span>Materi</span></div><div><strong>' + materials.topics.length + '</strong><span>Topik</span></div></div>' +
       '<div class="progress-panel-footer"><span>Target berikutnya</span><a href="#/lab/' + encodeURIComponent(next ? next.id : "") + '">' + esc(next ? next.title : "Semua lab selesai") + icon("arrow") + "</a></div></div></section>" +
-      '<div class="overview-filterbar"><label class="search-field">' + icon("search") + '<input id="home-search" placeholder="Cari IDOR, injection, authentication..." autocomplete="off"></label><select id="home-category"><option value="">Semua kategori</option>' +
+      '<div class="overview-filterbar"><label class="search-field">' + icon("search") + '<input id="home-search" aria-label="Cari kategori, topik, atau lab" placeholder="Cari IDOR, injection, authentication..." autocomplete="off"></label><select id="home-category" aria-label="Filter berdasarkan kategori"><option value="">Semua kategori</option>' +
       materials.categories.map(function (c) { return '<option value="' + esc(c.id) + '">' + esc(c.id.toUpperCase() + " · " + c.title) + "</option>"; }).join("") +
-      '</select><select id="home-progress"><option value="">Semua progres</option><option value="todo">Belum selesai</option><option value="done">Selesai</option></select></div>' +
+      '</select><select id="home-progress" aria-label="Filter berdasarkan progres"><option value="">Semua progres</option><option value="todo">Belum selesai</option><option value="done">Selesai</option></select></div>' +
       '<section id="catalog-section">' + topIntro("OWASP TOP 10:2025", "Pilih kategori. Temukan polanya.", "") +
       '<div class="overview-grid" id="home-grid">' + catCards + "</div></section>" +
       '<section class="learning-strip"><div class="strip-icon">' + icon("book") + '</div><div><span class="eyebrow">LANJUTKAN PERJALANAN</span><h3>Semua ' + materials.lessons.length + ' materi punya lab sendiri.</h3><p>Pilih kategori di atas untuk masuk ke topik dan jenis latihan yang lebih spesifik.</p></div><a class="button outline" href="#/all-labs">Lihat semua lab ' + icon("arrow") + "</a></section>",
@@ -198,7 +209,7 @@
       return '<a class="lesson-row" href="#/material/' + encodeURIComponent(lesson.id) + '"><span class="lesson-index">' + String(i + 1).padStart(3, "0") +
         '</span><div class="lesson-copy"><span class="eyebrow">' + esc((lesson.category || "").toUpperCase()) + ' · ' + esc(lesson.topic || "") + '</span><h3>' + esc(lesson.title) + '</h3><small>' + esc(lesson.paragraphs ? lesson.paragraphs[0] : "") + '</small></div><span class="lesson-state">' + (lab && isDone(lab.id) ? "✓ Selesai" : (lab ? lab.minutes + " min" : "")) + '</span>' + icon("arrow") + "</a>";
     }).join("");
-    layout('<div class="page-heading"><div><span class="eyebrow">PUSTAKA BELAJAR</span><h1>Materi ringkas, praktik nyata.</h1><p>Pahami konteksnya sebelum masuk ke jenis lab.</p></div><a class="button outline" href="#/">← Beranda</a></div><div class="filterbar"><label class="search-field">' + icon("search") + '<input id="library-search" placeholder="Cari materi, topik, atau kategori..." autocomplete="off"></label></div><div class="lesson-list" id="library-list">' + rows + "</div>", "page-library");
+    layout('<div class="page-heading"><div><span class="eyebrow">PUSTAKA BELAJAR</span><h1>Materi ringkas, praktik nyata.</h1><p>Pahami konteksnya sebelum masuk ke jenis lab.</p></div><a class="button outline" href="#/">← Beranda</a></div><div class="filterbar"><label class="search-field">' + icon("search") + '<input id="library-search" aria-label="Cari materi, topik, atau kategori" placeholder="Cari materi, topik, atau kategori..." autocomplete="off"></label></div><div class="lesson-list" id="library-list">' + rows + "</div>", "page-library");
     document.getElementById("library-search").addEventListener("input", function (event) {
       var q = (event.target.value || "").toLowerCase();
       document.getElementById("library-list").innerHTML = materials.lessons.filter(function (x) {
@@ -222,7 +233,7 @@
   }
   function renderAllLabs() {
     var cards = labs.map(function (lab, i) { return variantCard(lab, i); }).join("");
-    layout('<div class="page-heading"><div><span class="eyebrow">KATALOG LAB</span><h1>Semua lab, satu perjalanan.</h1><p>Gunakan filter untuk menemukan latihan yang ingin kamu ulangi.</p></div><a class="button outline" href="#/">← Beranda</a></div><div class="filterbar"><label class="search-field">' + icon("search") + '<input id="labs-search" placeholder="Cari lab, payload, atau topik..." autocomplete="off"></label><select id="labs-level"><option value="">Semua level</option><option>Pemula</option><option>Menengah</option><option>Lanjutan</option></select></div><div class="group-grid" id="all-labs-grid">' + cards + "</div>", "page-all-labs");
+    layout('<div class="page-heading"><div><span class="eyebrow">KATALOG LAB</span><h1>Semua lab, satu perjalanan.</h1><p>Gunakan filter untuk menemukan latihan yang ingin kamu ulangi.</p></div><a class="button outline" href="#/">← Beranda</a></div><div class="filterbar"><label class="search-field">' + icon("search") + '<input id="labs-search" aria-label="Cari lab, payload, atau topik" placeholder="Cari lab, payload, atau topik..." autocomplete="off"></label><select id="labs-level" aria-label="Filter berdasarkan level"><option value="">Semua level</option><option>Pemula</option><option>Menengah</option><option>Lanjutan</option></select></div><div class="group-grid" id="all-labs-grid">' + cards + "</div>", "page-all-labs");
     var s = document.getElementById("labs-search"), level = document.getElementById("labs-level");
     function filter() {
       var q = (s.value || "").toLowerCase(), lv = level.value;
@@ -285,7 +296,9 @@
       var input = {};
       try { input = JSON.parse(raw); } catch (_) { input = { id: raw }; }
       var id = Number(input.id || input.invoice_id || raw) || 5001;
-      out = { status: success ? 200 : 403, invoice_id: id, owner: id === 5002 ? "Rio" : (id === 5001 ? "Naya" : "Demo user"), session_user: "Naya" };
+      var rioInvoice = id === 1002 || id === 5002;
+      var nayaInvoice = id === 1001 || id === 5001;
+      out = { status: success ? 200 : 403, invoice_id: id, owner: rioInvoice ? "Rio" : (nayaInvoice ? "Naya" : "Demo user"), session_user: "Naya" };
     } else {
       out.status = success ? 200 : 422;
       out.request = lab.tag || lab.code_id || "fixture";
@@ -300,12 +313,12 @@
         var value = "";
         try { var s = JSON.parse(lab.starter || "{}"); value = s[field.key] == null ? "" : s[field.key]; } catch (_) {}
         var control = field.type === "select"
-          ? '<select data-field="' + esc(field.key) + '">' + (field.options || []).map(function (option) { return '<option value="' + esc(option) + '"' + (String(value) === String(option) ? " selected" : "") + '>' + esc(option) + '</option>'; }).join("") + '</select>'
-          : '<input data-field="' + esc(field.key) + '" type="' + (field.type === "number" ? "number" : "text") + '" value="' + esc(value) + '">';
+          ? '<select data-field="' + esc(field.key) + '" aria-label="' + esc(field.label || field.key) + '">' + (field.options || []).map(function (option) { return '<option value="' + esc(option) + '"' + (String(value) === String(option) ? " selected" : "") + '>' + esc(option) + '</option>'; }).join("") + '</select>'
+          : '<input data-field="' + esc(field.key) + '" aria-label="' + esc(field.label || field.key) + '" type="' + (field.type === "number" ? "number" : "text") + '" value="' + esc(value) + '">';
         return '<label>' + esc(field.label || field.key) + control + '</label>';
-      }).join("") + '</div><details class="raw-input"><summary>Lihat / edit JSON (opsional)</summary><textarea id="lab-input" rows="5">' + esc(lab.starter || "{}") + "</textarea></details>";
+      }).join("") + '</div><details class="raw-input"><summary>Lihat / edit JSON (opsional)</summary><textarea id="lab-input" aria-label="JSON input latihan" rows="5">' + esc(lab.starter || "{}") + "</textarea></details>";
     }
-    return '<textarea id="lab-input" rows="5">' + esc(lab.starter || "") + "</textarea>";
+    return '<textarea id="lab-input" aria-label="Input latihan" rows="5">' + esc(lab.starter || "") + "</textarea>";
   }
   function renderLab(id) {
     var lab = findLab(id);
@@ -315,9 +328,9 @@
     layout('<div class="lab-heading"><div><a class="back-link" href="#/topic/' + encodeURIComponent(lab.category || "") + "/" + encodeURIComponent(lab.topic || "") + '">← Kembali ke topik</a><span class="eyebrow">' + esc((lab.code_id || "LAB") + " / " + (lab.tag || "PRACTICE")) + '</span><h1>' + esc(lab.title) + '</h1></div><div class="lab-meta"><span class="pill">' + esc(lab.level || "Pemula") + '</span><span>' + esc(lab.minutes || 10) + ' menit</span><span class="xp-label">' + esc(lab.xp || 100) + ' XP</span></div></div><div class="lab-layout"><article class="mission-panel"><div class="panel-label"><span class="step-badge">01</span> THE MISSION</div><h2>Cerita singkat</h2><p>' + text(lab.story || "") + '</p><div class="goal-box"><span>' + icon("check") + ' Target kamu</span><p>' + esc(lab.goal || "") + '</p></div><div class="beginner-guide"><h3>Mulai dari sini</h3><ol>' + (lab.steps || []).map(function (s) { return "<li>" + esc(s) + "</li>"; }).join("") + "</ol></div><div class=\"hint-heading\"><h3>Hint bertahap</h3><span>Gratis · XP tetap utuh</span></div>" +
       '<details class="hint" open><summary>Hint 1 · Pahami idenya <span>×</span></summary><p>' + esc(lab.hint || "") + '</p></details><details class="hint"><summary>Hint 2 · Yang perlu diubah <span>+</span></summary><p>' + text(lab.hint2 || "") + '</p></details><details class="hint"><summary>Hint 3 · Contoh jawaban & alasan <span>+</span></summary><p>' + esc(lab.explanation || "") + "</p></details><div class=\"lab-context\">" + icon("check") + " Data fiktif · Fixture lokal · Aman untuk latihan</div></article>" +
       '<section class="work-panel"><div class="terminal-top"><div><span></span><span></span><span></span></div><span>playground / ' + esc(lab.code_id || "") + ' · ' + esc(lab.id.slice(-8)) + '</span><span>STATIC FIXTURE</span></div><div class="code-label">KODE / BUKTI YANG DIAMATI</div><pre class="code-block">' + esc(lab.code || "") + "</pre>" + sourceBlock(lab) +
-      '<div class="live-preview"><div class="live-preview-head"><div><strong>Live fixture runner</strong><small>Respons aplikasi divisualisasi secara lokal di browser.</small></div><span id="runtime-preview-status">HTTP 200 · fixture siap</span></div><div class="static-fixture-frame"><div class="static-fixture-bar"><strong>SITP Demo</strong><span>/demo · signed in as training</span><span class="green-dot"></span></div><div class="static-fixture-card"><div class="fixture-trace"><span>REQUEST</span> POST /virtual/' + esc(lab.code_id || "LAB") + ' <i>→</i><b>ready to send</b></div><div class="fixture-visual" id="fixture-visual"><div class="fixture-placeholder">Jalankan request untuk melihat respons aplikasi.</div></div></div></div><small>Output mengikuti parser dan state fixture lab. Tidak ada akses host, shell, jaringan, atau executable.</small></div>' +
+      '<div class="live-preview"><div class="live-preview-head"><div><strong>Live fixture runner</strong><small>Respons aplikasi divisualisasi secara lokal di browser.</small></div><span id="runtime-preview-status" role="status" aria-live="polite">HTTP 200 · fixture siap</span></div><div class="static-fixture-frame"><div class="static-fixture-bar"><strong>SITP Demo</strong><span>/demo · signed in as training</span><span class="green-dot"></span></div><div class="static-fixture-card"><div class="fixture-trace"><span>REQUEST</span> POST /virtual/' + esc(lab.code_id || "LAB") + ' <i>→</i><b>ready to send</b></div><div class="fixture-visual" id="fixture-visual" aria-live="polite"><div class="fixture-placeholder">Jalankan request untuk melihat respons aplikasi.</div></div></div></div><small>Output mengikuti parser dan state fixture lab. Tidak ada akses host, shell, jaringan, atau executable.</small></div>' +
       '<form class="lab-form" id="lab-form"><div class="guided-heading"><span>' + esc(lab.label || "Input latihan") + '</span><span>JSON dibuat otomatis</span></div>' + labInput(lab) + '<p class="input-note">Boleh mencoba berkali-kali. Jawaban salah dan hint tidak mengurangi XP.</p><div class="form-bottom"><button type="button" class="reset-input">↻ Ulang dari awal</button><button class="button lime" type="submit">Jalankan ' + icon("arrow") + "</button></div></form>" +
-      '<div class="response-panel" id="response-panel"><span class="response-label">OUTPUT</span><p class="response-placeholder">Respons eksperimenmu akan muncul di sini.</p></div></section></div>', "page-lab");
+      '<div class="response-panel" id="response-panel" role="status" aria-live="polite"><span class="response-label">OUTPUT</span><p class="response-placeholder">Respons eksperimenmu akan muncul di sini.</p></div></section></div>', "page-lab");
     var form = document.getElementById("lab-form"), textarea = document.getElementById("lab-input"), panel = document.getElementById("response-panel"), visual = document.getElementById("fixture-visual"), status = document.getElementById("runtime-preview-status");
     function currentRaw() {
       if (lab.fields && lab.fields.length && document.querySelector(".guided-fields")) {
