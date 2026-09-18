@@ -996,7 +996,8 @@
     {
       "title": "Penyimpanan password plaintext",
       "paragraphs": [
-        "Tidak ada transformasi kriptografi apa pun antara input password dan yang disimpan di database."
+        "Tidak ada transformasi kriptografi apa pun antara input password dan yang disimpan di database.",
+        "Pada lab ini, username hanya dipakai untuk mencari baris di dump tabel users. Akun Naya menampilkan bcrypt hash, sedangkan akun Rio menampilkan password plaintext pada kolom Stored password."
       ],
       "id": "a04-cryptographic-failures--weak-hashing--plaintext",
       "category": "a04-cryptographic-failures",

@@ -460,7 +460,7 @@
   async function init() {
     initShell();
     try {
-      var responses = await Promise.all([fetch("assets/materials.json?v=20260918-18"), fetch("assets/labs.json?v=20260918-18")]);
+      var responses = await Promise.all([fetch("assets/materials.json?v=20260918-19"), fetch("assets/labs.json?v=20260918-19")]);
       materials = await responses[0].json(); labs = await responses[1].json();
       window.sitpAcademyData = { materials: materials, labs: labs };
       updateTopProgress(); route();
