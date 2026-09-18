@@ -423,10 +423,10 @@ main,.page-home main{max-width:1320px;margin-inline:auto}
 .topbar-brand{gap:10px;min-width:0}
 .topbar-brand .brand-logo-wrap{display:flex;align-items:center;justify-content:center;width:118px;height:40px;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;flex-shrink:0}
 .topbar-brand .brand-logo{display:block;width:112px;height:auto;max-width:100%;object-fit:contain}
-.topbar-brand .brand-product{margin:0;color:#fff;font-size:8px;font-weight:800;letter-spacing:3px;line-height:1}
+.topbar-brand .brand-product{align-self:center;margin:0;padding-top:1px;color:#fff;font-size:9px;font-weight:800;letter-spacing:2.6px;line-height:1.1;white-space:nowrap}
 @media(max-width:700px){
   .topbar-brand{gap:8px}
   .topbar-brand .brand-logo-wrap{width:102px;height:36px}
   .topbar-brand .brand-logo{width:96px}
-  .topbar-brand .brand-product{font-size:7px;letter-spacing:2.2px}
+  .topbar-brand .brand-product{font-size:7.5px;letter-spacing:2.2px}
 }
