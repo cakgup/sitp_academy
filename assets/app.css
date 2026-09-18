@@ -420,14 +420,15 @@ main,.page-home main{max-width:1320px;margin-inline:auto}
 
 /* SATRIA brand lockup: use the canonical logo from the SATRIA repository while
    keeping the Academy product label readable against the blue top bar. */
-.topbar-brand{gap:12px;min-width:0}
+.topbar-brand{gap:0;min-width:0}
+.topbar-brand .brand-lockup{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0}
 .topbar-brand .brand-logo-wrap{display:flex;align-items:center;justify-content:center;width:126px;height:42px;padding:5px 10px;border:1px solid rgba(255,255,255,.35);border-radius:9px;background:#fff;box-shadow:0 7px 16px rgba(8,27,61,.18);flex-shrink:0}
 .topbar-brand .brand-logo{display:block;width:106px;height:auto;max-width:100%;object-fit:contain}
-.topbar-brand .brand-product{align-self:flex-end;margin:0 0 5px;color:#fff;font-size:8px;font-weight:800;letter-spacing:3px;line-height:1}
+.topbar-brand .brand-product{margin:0;color:#fff;font-size:8px;font-weight:800;letter-spacing:3px;line-height:1}
 .topbar-brand:hover .brand-logo-wrap{border-color:#ffdf65;box-shadow:0 9px 20px rgba(8,27,61,.24)}
 @media(max-width:700px){
-  .topbar-brand{gap:8px}
+  .topbar-brand .brand-lockup{gap:2px}
   .topbar-brand .brand-logo-wrap{width:102px;height:36px;padding:4px 8px;border-radius:8px}
   .topbar-brand .brand-logo{width:86px}
-  .topbar-brand .brand-product{font-size:7px;letter-spacing:2.2px;margin-bottom:4px}
+  .topbar-brand .brand-product{font-size:7px;letter-spacing:2.2px}
 }
