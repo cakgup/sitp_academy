@@ -258,16 +258,56 @@
   function sourceBlock(lab) {
     return '<details class="source-reference"><summary>View page source</summary><pre>' + esc(lab.code || "Source fixture tersedia di data lab.") + "</pre></details>";
   }
+  function visualCopy(lab, success) {
+    var text = ((lab.topic || "") + " " + (lab.tag || "")).toLowerCase();
+    var copy = { kicker: "FIXTURE OBSERVATION", title: success ? "Kondisi rentan teramati" : "Kondisi belum terpenuhi", request: "Input client", impact: "Dampak teramati", note: success ? "Input berhasil melewati aturan fixture sehingga dampaknya dapat diamati." : "Input diterima, tetapi kondisi target belum muncul. Gunakan hint untuk membandingkan perubahan." };
+    var map = [
+      { keys: ["sqli", "sql injection"], kicker: "DATABASE QUERY", title: success ? "Query mengembalikan data" : "Query belum mengembalikan target", request: "Parameter query", impact: "Hasil query", note: success ? "Input ikut memengaruhi query sehingga data yang seharusnya dibatasi terlihat." : "Query fixture belum mencapai kondisi target SQL injection." },
+      { keys: ["command injection"], kicker: "COMMAND PARSER", title: success ? "Perintah virtual diterima" : "Perintah virtual ditolak", request: "Argumen command", impact: "Output command", note: "Fixture mensimulasikan parser command tanpa menjalankan shell atau proses sistem operasi." },
+      { keys: ["lfi"], kicker: "FILE RESOLVER", title: success ? "Path file melewati resolver" : "Path file belum melewati resolver", request: "Path yang dikirim", impact: "Respons file", note: "Fixture menampilkan keputusan resolver secara lokal tanpa membaca file host." },
+      { keys: ["file upload"], kicker: "UPLOAD PIPELINE", title: success ? "File diterima pipeline" : "File ditolak pipeline", request: "Metadata file", impact: "Keputusan storage", note: "Fixture memperlihatkan keputusan validasi nama, tipe, dan lokasi file secara aman." },
+      { keys: ["csrf"], kicker: "CROSS-ORIGIN REQUEST", title: success ? "Request lintas origin diterima" : "Request lintas origin diblokir", request: "Origin dan token", impact: "Perubahan state", note: "Fixture memvisualisasikan hubungan cookie, origin, token, dan perubahan state tanpa request jaringan." },
+      { keys: ["idor", "broken function access"], kicker: "AUTHORIZATION CHECK", title: success ? "Akses melewati pemeriksaan izin" : "Akses masih dibatasi", request: "Object atau function target", impact: "Data / aksi", note: "Fixture membandingkan identitas sesi dengan objek atau fungsi yang diminta." },
+      { keys: ["business logic", "business rule", "flawed auth workflow"], kicker: "BUSINESS RULE ENGINE", title: success ? "Aturan bisnis dapat dilewati" : "Aturan bisnis masih menahan input", request: "Parameter transaksi", impact: "Keputusan bisnis", note: "Fixture memperlihatkan perbandingan aturan resmi dengan nilai yang dikirim client." },
+      { keys: ["username enumeration", "brute force", "session management", "password reset", "authentication"], kicker: "AUTHENTICATION FLOW", title: success ? "Alur autentikasi dapat dipengaruhi" : "Alur autentikasi belum terpengaruh", request: "Kredensial atau sesi", impact: "Keputusan login", note: "Fixture memperlihatkan titik keputusan autentikasi tanpa membuat akun atau mengirim kredensial." },
+      { keys: ["misconfig", "configuration", "exposed vcs", "cookie misconfig", "http methods"], kicker: "SECURITY CONFIGURATION", title: success ? "Konfigurasi membuka permukaan serang" : "Konfigurasi belum menunjukkan dampak", request: "Header atau setting", impact: "Kontrol keamanan", note: "Fixture membandingkan konfigurasi yang terlihat oleh client dengan kontrol yang seharusnya diterapkan server." },
+      { keys: ["supply chain", "malicious package", "unpinned"], kicker: "BUILD SUPPLY CHAIN", title: success ? "Artefak tidak tepercaya diterima" : "Artefak belum diterima", request: "Paket / referensi build", impact: "Keputusan pipeline", note: "Fixture menampilkan keputusan trust pada paket, registry, dan referensi build secara lokal." },
+      { keys: ["crypto", "hashing", "randomness", "jwt", "sensitive data"], kicker: "CRYPTOGRAPHY CHECK", title: success ? "Data sensitif dapat dipengaruhi" : "Pemeriksaan kriptografi belum terpenuhi", request: "Secret atau token", impact: "Perlindungan data", note: "Fixture memperlihatkan apakah secret, token, atau data sensitif melewati pemeriksaan yang diharapkan." },
+      { keys: ["integrity"], kicker: "INTEGRITY VERIFICATION", title: success ? "Data tanpa verifikasi diterima" : "Verifikasi masih menahan data", request: "Paket / state", impact: "Keputusan integritas", note: "Fixture menunjukkan titik ketika signature, checksum, atau sumber data seharusnya diverifikasi." },
+      { keys: ["logging", "alerting", "detection"], kicker: "DETECTION PIPELINE", title: success ? "Sinyal terdeteksi terlambat atau lolos" : "Rule deteksi belum terpicu", request: "Event dan threshold", impact: "Status alert", note: "Fixture memvisualisasikan event, window, threshold, dan keputusan alert tanpa mengirim log keluar." },
+      { keys: ["exception", "non atomic", "type unsafe", "error handling"], kicker: "ERROR PATH", title: success ? "Error path membuka dampak" : "Error path belum terbuka", request: "Input atau kondisi gagal", impact: "State setelah error", note: "Fixture membantu membandingkan state normal dengan state ketika exception atau partial failure terjadi." }
+    ];
+    for (var i = 0; i < map.length; i++) {
+      if (map[i].keys.some(function (key) { return text.indexOf(key) >= 0; })) return map[i];
+    }
+    return copy;
+  }
+  function displayValue(value) {
+    return typeof value === "object" ? JSON.stringify(value) : String(value == null ? "—" : value);
+  }
+  function inputRows(raw) {
+    var input;
+    try { input = JSON.parse(raw); } catch (_) { input = { payload: raw || "—" }; }
+    if (!input || typeof input !== "object" || Array.isArray(input)) input = { payload: displayValue(input) };
+    return Object.keys(input).slice(0, 8).map(function (key) { return "<tr><td>" + esc(key) + "</td><td>" + esc(displayValue(input[key])) + "</td></tr>"; }).join("");
+  }
   function fixtureVisual(lab, data, raw) {
     if (!data) return '<div class="fixture-placeholder">Jalankan request untuk melihat respons aplikasi.</div>';
+    var success = Number(data.status) === 200;
     if ((lab.topic || "") === "xss") {
-      return '<div class="xss-safe-preview"><div><strong>Payload preview</strong><span>escaped · tidak dieksekusi</span></div><pre>' + esc(raw || "") + '</pre><small>Deployment GitHub Pages menampilkan payload sebagai teks agar latihan publik tetap aman.</small></div>';
+      return '<div class="xss-safe-preview"><div><strong>Browser render preview</strong><span>escaped · tidak dieksekusi</span></div><div class="xss-browser-window"><div class="xss-browser-bar"><span></span><span></span><span></span><code>/preview</code></div><div class="xss-browser-body"><small>Rendered output</small><pre>' + esc(raw || "") + '</pre></div></div><small>Payload ditampilkan sebagai teks agar latihan GitHub Pages tetap aman. Di aplikasi rentan, konteks output ini dapat ditafsirkan browser sebagai HTML atau JavaScript.</small></div>';
     }
     var keys = Object.keys(data);
     if (keys.indexOf("invoice_id") >= 0) {
-      return '<table class="fixture-table"><thead><tr><th>Status</th><th>Invoice</th><th>Owner</th><th>Session user</th></tr></thead><tbody><tr><td class="status-cell">' + esc(data.status || 200) + '</td><td>' + esc(data.invoice_id) + '</td><td>' + esc(data.owner || "—") + '</td><td>' + esc(data.session_user || "training") + "</td></tr></tbody></table>";
+      return '<div class="fixture-specific"><div class="fixture-specific-head"><div><span class="fixture-kicker">AUTHORIZATION CHECK</span><strong>Invoice lookup</strong></div><span class="fixture-state ' + (success ? "is-success" : "is-error") + '">' + (success ? "200 · terbuka" : "403 · dibatasi") + '</span></div><table class="fixture-table"><thead><tr><th>Status</th><th>Invoice</th><th>Owner</th><th>Session user</th></tr></thead><tbody><tr><td class="status-cell">' + esc(data.status || 200) + '</td><td>' + esc(data.invoice_id) + '</td><td>' + esc(data.owner || "—") + '</td><td>' + esc(data.session_user || "training") + "</td></tr></tbody></table></div>";
     }
-    return '<table class="fixture-table"><thead><tr><th>Field</th><th>Nilai</th></tr></thead><tbody>' + keys.map(function (k) { return "<tr><td>" + esc(k) + "</td><td>" + esc(typeof data[k] === "object" ? JSON.stringify(data[k]) : data[k]) + "</td></tr>"; }).join("") + "</tbody></table>";
+    var copy = visualCopy(lab, success);
+    var resultRows = [
+      ["Status", data.status || 200],
+      ["Kondisi", data.condition || "—"],
+      [copy.impact, data.message || data.request || "—"]
+    ];
+    return '<div class="fixture-specific fixture-contextual"><div class="fixture-specific-head"><div><span class="fixture-kicker">' + esc(copy.kicker) + '</span><strong>' + esc(copy.title) + '</strong></div><span class="fixture-state ' + (success ? "is-success" : "is-error") + '">' + (success ? "CONDITION REACHED" : "TRY AGAIN") + '</span></div><div class="fixture-journey" aria-label="Alur observasi fixture"><div><b>1</b><span>Input client</span><small>' + esc(copy.request) + '</small></div><i>→</i><div><b>2</b><span>Parser server</span><small>' + esc(data.condition || "menunggu input") + '</small></div><i>→</i><div><b>3</b><span>Dampak</span><small>' + esc(copy.impact) + '</small></div></div><div class="fixture-data-grid"><div><h4>Request yang diamati</h4><table class="fixture-table"><thead><tr><th>Field</th><th>Nilai</th></tr></thead><tbody>' + inputRows(raw) + '</tbody></table></div><div><h4>Hasil fixture</h4><table class="fixture-table"><thead><tr><th>Field</th><th>Nilai</th></tr></thead><tbody>' + resultRows.map(function (row) { return '<tr><td>' + esc(row[0]) + '</td><td>' + esc(displayValue(row[1])) + '</td></tr>'; }).join("") + '</tbody></table></div></div><p class="fixture-teaching-note">' + esc(copy.note) + '</p></div>';
   }
   function defaultResponse(lab) {
     if (lab.kind === "foundation" && lab.code_id === "A01") return { status: 200, invoice_id: 5001, owner: "Naya", session_user: "Naya" };
@@ -292,7 +332,7 @@
   }
   function responseFor(lab, raw, success) {
     var out = defaultResponse(lab);
-    if (lab.code_id === "A01" || (lab.category || "").indexOf("a01") === 0) {
+    if (lab.id === "a01" || lab.id === "lesson-a01-access-control--idor--basic-read") {
       var input = {};
       try { input = JSON.parse(raw); } catch (_) { input = { id: raw }; }
       var id = Number(input.id || input.invoice_id || raw) || 5001;
@@ -307,15 +347,37 @@
     }
     return out;
   }
+  function fieldLabel(field) {
+    var labels = {
+      access_ms: "Waktu akses (ms)", action: "Aksi", amount: "Jumlah", api: "Mode API", api_key: "API key",
+      artifact: "Artefak", attempts: "Jumlah percobaan", body: "Body request", browser: "Browser", cache_control: "Cache-Control",
+      candidate: "Kandidat", checksum: "Checksum", content: "Konten", content_type: "Content-Type", coupon: "Kupon",
+      csp: "Content Security Policy", csrf_token: "Token CSRF", currency: "Mata uang", data: "Data", debug: "Mode debug",
+      divisor: "Pembagi", email: "Email", encoded: "Nilai ter-encode", end: "Waktu akhir", filename: "Nama file",
+      frame_ancestors: "Frame ancestors", frozen: "Status freeze", host: "Host", html: "HTML", httponly: "HttpOnly",
+      id: "ID objek", idempotency_key: "Idempotency key", image: "Gambar", integrity: "Integritas", is_admin: "Status admin",
+      method: "HTTP method", new_password: "Password baru", operation: "Operasi", origin: "Origin", override: "Override",
+      package: "Paket", parent_origin: "Parent origin", password: "Password", path: "Path", payload: "Payload",
+      policy: "Kebijakan", preset_sid: "Preset SID", price: "Harga", product_id: "ID produk", provider: "Provider",
+      quantity: "Jumlah", recipient: "Penerima", ref: "Referensi", referer: "Referer", region: "Region", registry: "Registry",
+      retries: "Jumlah retry", return_quantity: "Jumlah retur", role: "Peran pengguna", role_cookie: "Role cookie", samesite: "SameSite",
+      scheme: "Skema", script: "Script", secret: "Secret", secure: "Secure", seed: "Seed", session_id: "ID sesi",
+      source: "Sumber", start: "Waktu mulai", state: "State", status: "Status", step: "Langkah", target: "Target",
+      threshold: "Batas pemicu alert", times: "Jumlah kejadian", timestamp: "Timestamp", token: "Token", trusted_device: "Trusted device",
+      unit_price: "Harga kiriman (rupiah)", url: "URL", user_id: "ID pengguna", username: "Username", version: "Versi",
+      window_seconds: "Jendela waktu (detik)", x_demo: "Header X-Demo"
+    };
+    return labels[field.key] || field.label || String(field.key || "Input").replace(/_/g, " ").replace(/\b\w/g, function (m) { return m.toUpperCase(); });
+  }
   function labInput(lab) {
     if (lab.fields && lab.fields.length) {
       return '<div class="guided-fields">' + lab.fields.map(function (field) {
         var value = "";
         try { var s = JSON.parse(lab.starter || "{}"); value = s[field.key] == null ? "" : s[field.key]; } catch (_) {}
         var control = field.type === "select"
-          ? '<select data-field="' + esc(field.key) + '" aria-label="' + esc(field.label || field.key) + '">' + (field.options || []).map(function (option) { return '<option value="' + esc(option) + '"' + (String(value) === String(option) ? " selected" : "") + '>' + esc(option) + '</option>'; }).join("") + '</select>'
-          : '<input data-field="' + esc(field.key) + '" aria-label="' + esc(field.label || field.key) + '" type="' + (field.type === "number" ? "number" : "text") + '" value="' + esc(value) + '">';
-        return '<label>' + esc(field.label || field.key) + control + '</label>';
+          ? '<select data-field="' + esc(field.key) + '" aria-label="' + esc(fieldLabel(field)) + '">' + (field.options || []).map(function (option) { return '<option value="' + esc(option) + '"' + (String(value) === String(option) ? " selected" : "") + '>' + esc(option) + '</option>'; }).join("") + '</select>'
+          : '<input data-field="' + esc(field.key) + '" aria-label="' + esc(fieldLabel(field)) + '" type="' + (field.type === "number" ? "number" : "text") + '" value="' + esc(value) + '">';
+        return '<label>' + esc(fieldLabel(field)) + control + '</label>';
       }).join("") + '</div><details class="raw-input"><summary>Lihat / edit JSON (opsional)</summary><textarea id="lab-input" aria-label="JSON input latihan" rows="5">' + esc(lab.starter || "{}") + "</textarea></details>";
     }
     return '<textarea id="lab-input" aria-label="Input latihan" rows="5">' + esc(lab.starter || "") + "</textarea>";
@@ -382,7 +444,7 @@
   async function init() {
     initShell();
     try {
-      var responses = await Promise.all([fetch("assets/materials.json"), fetch("assets/labs.json")]);
+      var responses = await Promise.all([fetch("assets/materials.json?v=20260918-13"), fetch("assets/labs.json?v=20260918-13")]);
       materials = await responses[0].json(); labs = await responses[1].json();
       window.sitpAcademyData = { materials: materials, labs: labs };
       updateTopProgress(); route();
