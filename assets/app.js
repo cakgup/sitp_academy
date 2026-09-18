@@ -293,13 +293,18 @@
   }
   function fixtureVisual(lab, data, raw) {
     if (!data) return '<div class="fixture-placeholder">Jalankan request untuk melihat respons aplikasi.</div>';
-    var success = Number(data.status) === 200;
+    var success = data.target_reached === true || (data.target_reached == null && Number(data.status) === 200);
     if ((lab.topic || "") === "xss") {
       return '<div class="xss-safe-preview"><div><strong>Browser render preview</strong><span>escaped · tidak dieksekusi</span></div><div class="xss-browser-window"><div class="xss-browser-bar"><span></span><span></span><span></span><code>/preview</code></div><div class="xss-browser-body"><small>Rendered output</small><pre>' + esc(raw || "") + '</pre></div></div><small>Payload ditampilkan sebagai teks agar latihan GitHub Pages tetap aman. Di aplikasi rentan, konteks output ini dapat ditafsirkan browser sebagai HTML atau JavaScript.</small></div>';
     }
     var keys = Object.keys(data);
     if (keys.indexOf("invoice_id") >= 0) {
       return '<div class="fixture-specific"><div class="fixture-specific-head"><div><span class="fixture-kicker">AUTHORIZATION CHECK</span><strong>Invoice lookup</strong></div><span class="fixture-state ' + (success ? "is-success" : "is-error") + '">' + (success ? "200 · terbuka" : "403 · dibatasi") + '</span></div><table class="fixture-table"><thead><tr><th>Status</th><th>Invoice</th><th>Owner</th><th>Session user</th></tr></thead><tbody><tr><td class="status-cell">' + esc(data.status || 200) + '</td><td>' + esc(data.invoice_id) + '</td><td>' + esc(data.owner || "—") + '</td><td>' + esc(data.session_user || "training") + "</td></tr></tbody></table></div>";
+    }
+    if (lab.id === "lesson-a04-cryptographic-failures--weak-hashing--plaintext" && data.username) {
+      var storageLabel = data.storage === "plaintext" ? "PLAINTEXT" : (data.storage || "—");
+      var exposureLabel = data.password_exposed ? "terbaca" : "tidak terbaca";
+      return '<div class="fixture-specific"><div class="fixture-specific-head"><div><span class="fixture-kicker">USER TABLE LOOKUP</span><strong>' + (success ? "Password plaintext terbaca" : "Baris akun belum menjadi target") + '</strong></div><span class="fixture-state ' + (success ? "is-success" : "is-error") + '">' + (success ? "200 · exposed" : "200 · hashed") + '</span></div><table class="fixture-table"><thead><tr><th>Username</th><th>Stored password</th><th>Storage</th><th>Exposure</th></tr></thead><tbody><tr><td>' + esc(data.username) + '</td><td>' + esc(data.stored_password || "—") + '</td><td>' + esc(storageLabel) + '</td><td class="status-cell">' + esc(exposureLabel) + '</td></tr></tbody></table><p class="fixture-teaching-note">Username hanya dipakai sebagai kunci lookup. Perhatikan kolom <strong>Stored password</strong>: Rio tersimpan apa adanya, sedangkan akun yang aman menyimpan hash sehingga password asli tidak muncul.</p></div>';
     }
     var copy = visualCopy(lab, success);
     var resultRows = [
@@ -332,7 +337,18 @@
   }
   function responseFor(lab, raw, success) {
     var out = defaultResponse(lab);
-    if (lab.id === "a01" || lab.id === "lesson-a01-access-control--idor--basic-read") {
+    if (lab.id === "lesson-a04-cryptographic-failures--weak-hashing--plaintext") {
+      var lookup = {};
+      try { lookup = JSON.parse(raw); } catch (_) { lookup = { username: raw }; }
+      var username = String(lookup.username || "").trim().toLowerCase();
+      if (username === "rio") {
+        out = { status: 200, username: "rio", stored_password: "rio-plaintext-demo", storage: "plaintext", password_exposed: true, target_reached: true, condition: "user row returned without password hashing", message: "Baris Rio menyimpan password apa adanya: rio-plaintext-demo." };
+      } else if (username === "naya") {
+        out = { status: 200, username: "naya", stored_password: "$2y$... (bcrypt hash)", storage: "bcrypt", password_exposed: false, target_reached: false, condition: "user row returned with a one-way hash", message: "Akun Naya memakai hash bcrypt; cari baris Rio untuk melihat password plaintext." };
+      } else {
+        out = { status: 404, username: username || "—", stored_password: "—", storage: "not found", password_exposed: false, target_reached: false, condition: "user row not found", message: "Username demo tidak ditemukan. Coba akun Rio." };
+      }
+    } else if (lab.id === "a01" || lab.id === "lesson-a01-access-control--idor--basic-read") {
       var input = {};
       try { input = JSON.parse(raw); } catch (_) { input = { id: raw }; }
       var id = Number(input.id || input.invoice_id || raw) || 5001;
@@ -444,7 +460,7 @@
   async function init() {
     initShell();
     try {
-      var responses = await Promise.all([fetch("assets/materials.json?v=20260918-13"), fetch("assets/labs.json?v=20260918-13")]);
+      var responses = await Promise.all([fetch("assets/materials.json?v=20260918-18"), fetch("assets/labs.json?v=20260918-18")]);
       materials = await responses[0].json(); labs = await responses[1].json();
       window.sitpAcademyData = { materials: materials, labs: labs };
       updateTopProgress(); route();

@@ -176,7 +176,8 @@
     {
       "title": "Weak Password Hashing",
       "paragraphs": [
-        "Password yang disimpan plaintext, di-hash dengan algoritma cepat tanpa salt (MD5/SHA1), atau cuma \"disamarkan\" (encoding) alih-alih benar-benar di-hash, membuat database yang bocor langsung membocorkan seluruh password penggunanya."
+        "Password yang disimpan plaintext, di-hash dengan algoritma cepat tanpa salt (MD5/SHA1), atau cuma \"disamarkan\" (encoding) alih-alih benar-benar di-hash, membuat database yang bocor langsung membocorkan seluruh password penggunanya.",
+        "Di lab ini, username hanya dipakai sebagai kunci lookup. Bandingkan baris Naya yang menyimpan bcrypt hash dengan baris Rio yang menampilkan password plaintext di kolom Stored password."
       ],
       "id": "weak-hashing",
       "category": "a04-cryptographic-failures"
